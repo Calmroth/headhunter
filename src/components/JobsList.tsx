@@ -8,6 +8,8 @@ type Props = {
   query: string;
   focusedCountryCode: string | null; // alpha-2
   focusedFirmId?: string | null;
+  /** Rail-hover preview — also narrows the jobs list while a row is hovered. */
+  hoveredFirmId?: string | null;
   focusedRegionLabel: string | null;
   profileDisciplines?: ReadonlyArray<string>;
   matchingJobIds?: ReadonlySet<string>;
@@ -21,6 +23,7 @@ type Props = {
   markSeen: (id: string) => void;
   onOpenJob: (id: string) => void;
   onClearRegion: () => void;
+  onClearFirm?: () => void;
   onHoverFirm?: (firmId: string | null) => void;
 };
 
@@ -30,6 +33,7 @@ export function JobsList({
   query,
   focusedCountryCode,
   focusedFirmId,
+  hoveredFirmId,
   focusedRegionLabel,
   profileDisciplines,
   matchingJobIds,
@@ -43,15 +47,20 @@ export function JobsList({
   markSeen,
   onOpenJob,
   onClearRegion,
+  onClearFirm,
   onHoverFirm,
 }: Props) {
+  // Hover takes precedence over focus for narrowing — rail-hover is a
+  // transient preview; clicking promotes it to focus.
+  const effectiveFirmId = hoveredFirmId ?? focusedFirmId ?? null;
+  const focusedFirm = effectiveFirmId ? FIRMS_BY_ID[effectiveFirmId] : null;
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = JOBS.filter((j) => {
       const firm = FIRMS_BY_ID[j.firmId];
       if (!firm) return false;
       if (filteredJobIds && !filteredJobIds.has(j.id)) return false;
-      if (focusedFirmId && j.firmId !== focusedFirmId) return false;
+      if (effectiveFirmId && j.firmId !== effectiveFirmId) return false;
       if (focusedCountryCode && firm.countryCode !== focusedCountryCode) return false;
       if (!q) return true;
       return (
@@ -77,9 +86,13 @@ export function JobsList({
 
       return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
     });
-  }, [query, focusedCountryCode, focusedFirmId, profileDisciplines, filteredJobIds, isSeen]);
+  }, [query, focusedCountryCode, effectiveFirmId, profileDisciplines, filteredJobIds, isSeen]);
 
-  const label = focusedRegionLabel ?? 'Worldwide';
+  // Firm focus takes precedence over country focus in the header so the user
+  // sees exactly which set is being filtered. Falls back to region or worldwide.
+  const label = focusedFirm
+    ? focusedFirm.name
+    : focusedRegionLabel ?? 'Worldwide';
   const count = filtered.length;
 
   // Keyboard list nav. Tracks an index into `filtered`. j/k step, Enter opens.
@@ -89,7 +102,7 @@ export function JobsList({
   useEffect(() => {
     // Reset focus index whenever the result set changes.
     setKbdIndex(null);
-  }, [count, focusedCountryCode, focusedFirmId, query]);
+  }, [count, focusedCountryCode, effectiveFirmId, query]);
 
   useEffect(() => {
     const isTyping = () => {
@@ -141,7 +154,7 @@ export function JobsList({
   }, [kbdIndex]);
 
   // Show pulse on the count cell when filters/region change.
-  const pulseKey = `${count}-${focusedCountryCode ?? 'all'}-${focusedFirmId ?? 'none'}`;
+  const pulseKey = `${count}-${focusedCountryCode ?? 'all'}-${effectiveFirmId ?? 'none'}`;
 
   return (
     <aside className="jobs">
@@ -154,11 +167,19 @@ export function JobsList({
             </span>{' '}
             {count === 1 ? 'ROLE' : 'ROLES'}
           </span>
-          {focusedCountryCode && (
+          {focusedFirm ? (
+            <button
+              type="button"
+              className="jobs-clear mono"
+              onClick={onClearFirm ?? onClearRegion}
+            >
+              Clear firm
+            </button>
+          ) : focusedCountryCode ? (
             <button type="button" className="jobs-clear mono" onClick={onClearRegion}>
               Clear region
             </button>
-          )}
+          ) : null}
         </div>
         {filtersActive && count < TOTAL_JOBS && (
           <p className="mono jobs-filter-meta">

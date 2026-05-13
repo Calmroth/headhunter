@@ -220,3 +220,16 @@
 .leaflet-popup.firm-popup-leaflet .leaflet-popup-close-button:hover {
   color: var(--deep-ink);
 }
+
+/* Smooth popup enter/exit so hovering between dots feels continuous.
+   Leaflet mounts a fresh popup each open; transitioning opacity + a
+   small upward translate makes the swap read as a fade-and-rise. */
+/* Popup entry is now driven by anime.js (PopupMountAnimator in MapView.tsx).
+   The wrapper and tip animate translate/scale/opacity, and inner sections
+   stagger in just behind. CSS only handles box-shadow transitions and the
+   reduced-motion fallback (no animation, popup just appears). */
+.leaflet-popup.firm-popup-leaflet .leaflet-popup-content-wrapper,
+.leaflet-popup.firm-popup-leaflet .leaflet-popup-tip {
+  transform-origin: 50% 100%;
+  transition: box-shadow var(--d-base) var(--ease-out-quart);
+}

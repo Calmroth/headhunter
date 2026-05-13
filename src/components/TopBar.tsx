@@ -1,19 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Profile } from '../data/profile';
-import { LinkedInSignIn } from './LinkedInSignIn';
 import './TopBar.css';
 import './LinkedInSignIn.css';
 
 type Props = {
   profile: Profile | null;
-  onSignIn: () => void;
+  onRequestSignIn: () => void;
   onSignOut: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
 };
 
-export function TopBar({ profile, onSignIn, onSignOut, theme, onToggleTheme }: Props) {
-  const [modalOpen, setModalOpen] = useState(false);
+export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleTheme }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -35,11 +33,6 @@ export function TopBar({ profile, onSignIn, onSignOut, theme, onToggleTheme }: P
     };
   }, [menuOpen]);
 
-  const handleAuthorized = () => {
-    setModalOpen(false);
-    onSignIn();
-  };
-
   const handleSignOut = () => {
     setMenuOpen(false);
     onSignOut();
@@ -47,7 +40,7 @@ export function TopBar({ profile, onSignIn, onSignOut, theme, onToggleTheme }: P
 
   return (
     <header className="topbar">
-      <a className="wordmark serif" href="/" aria-label="Headhunter home">
+      <a className="wordmark serif" href="/" aria-label="Lead Hunter home">
         Headhunter
       </a>
 
@@ -85,6 +78,26 @@ export function TopBar({ profile, onSignIn, onSignOut, theme, onToggleTheme }: P
                     {profile.city.toUpperCase()} · {profile.countryCode}
                   </span>
                 </div>
+
+                <div className="account-menu-section">
+                  <span className="account-menu-label mono">Expertise</span>
+                  <ul className="account-menu-chips">
+                    {profile.disciplines.map((d) => (
+                      <li key={d} className="account-menu-chip">{d}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="account-menu-section">
+                  <span className="account-menu-label mono">Looking for</span>
+                  <p className="account-menu-text">
+                    {profile.seniorities.join(' / ')} roles in{' '}
+                    {profile.disciplines.slice(0, 2).join(' or ')}
+                    {profile.disciplines.length > 2 ? ' and adjacent' : ''}
+                    , based in or near {profile.city}.
+                  </p>
+                </div>
+
                 <button
                   type="button"
                   className="account-menu-item is-danger"
@@ -100,19 +113,13 @@ export function TopBar({ profile, onSignIn, onSignOut, theme, onToggleTheme }: P
           <button
             type="button"
             className="linkedin-signin"
-            onClick={() => setModalOpen(true)}
+            onClick={onRequestSignIn}
           >
             <span className="linkedin-signin-mark" aria-hidden="true">in</span>
             <span>Sign in with LinkedIn</span>
           </button>
         )}
       </nav>
-
-      <LinkedInSignIn
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onAuthorized={handleAuthorized}
-      />
     </header>
   );
 }

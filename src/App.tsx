@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { TopBar } from './components/TopBar';
+import { LinkedInSignIn } from './components/LinkedInSignIn';
 import { MapView, type MapTarget } from './components/MapView';
 import { SearchBar } from './components/SearchBar';
 import { JobsList } from './components/JobsList';
 import { FirmsList } from './components/FirmsList';
-import { JobDetail } from './components/JobDetail';
-import { JobApply } from './components/JobApply';
-import { ParticleField } from './components/ParticleField';
+const JobDetail = lazy(() => import('./components/JobDetail').then((m) => ({ default: m.JobDetail })));
+const JobApply = lazy(() => import('./components/JobApply').then((m) => ({ default: m.JobApply })));
+const ParticleField = lazy(() => import('./components/ParticleField').then((m) => ({ default: m.ParticleField })));
 import { EMPTY_FILTERS, type FirmsFiltersState } from './components/FirmsFilters';
 import { KbdLegend } from './components/KbdLegend';
 import { Connectors } from './components/Connectors';
@@ -35,6 +36,12 @@ export function App() {
   const { profile, signIn, signOut } = useProfile();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isSeen, markSeen } = useSeenJobs();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const requestSignIn = () => setAuthModalOpen(true);
+  const handleAuthorized = () => {
+    setAuthModalOpen(false);
+    signIn();
+  };
 
   const [query, setQuery] = useState('');
   const [focusedCountry, setFocusedCountry] = useState<{
@@ -46,9 +53,6 @@ export function App() {
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
   const [openJobId, setOpenJobId] = useState<string | null>(null);
   const [view, setView] = useState<'detail' | 'apply'>('detail');
-  // Globe was retired; we only operate on the 2D map now. The setter is kept
-  // for legacy call sites; the value is unused.
-  const [, setWorldMode] = useState<'globe' | 'map'>('map');
   const [filters, setFiltersState] = useState<FirmsFiltersState>(EMPTY_FILTERS);
 
   const [showOnboard, setShowOnboard] = useState<boolean>(() => {
@@ -112,7 +116,6 @@ export function App() {
         bboxNE: ne,
         key: nextKey(),
       });
-      setWorldMode('map');
     }
   };
   const keyRef = useRef(1);
@@ -122,7 +125,6 @@ export function App() {
     if (!profile) return;
     setFocusedCountry({ alpha2: profile.countryCode, label: profile.country });
     setMapTarget({ kind: 'region', lat: profile.lat, lng: profile.lng, key: nextKey() });
-    setWorldMode('map');
   }, [profile]);
 
   useEffect(() => {
@@ -130,7 +132,6 @@ export function App() {
     setFocusedCountry(null);
     setFocusedFirmId(null);
     setMapTarget({ kind: 'world', key: nextKey() });
-    setWorldMode('map');
   }, [profile]);
 
   // On first load (no profile yet), zoom out to full world and centre on the
@@ -165,6 +166,27 @@ export function App() {
 
   const regionLabel = focusedCountry?.label ?? null;
   const regionAlpha2 = focusedCountry?.alpha2 ?? null;
+
+  // Rail-hover preview: when the user mouses over a firm row or job row,
+  // soft-pan the map to that firm's dot so it's easy to find. Debounced
+  // so casual cursor traversal doesn't drag the map around. Map dot hover
+  // does NOT trigger this — the map handlers no longer call onFirmHover.
+  useEffect(() => {
+    if (!hoveredFirmId) return;
+    if (focusedFirmId === hoveredFirmId) return; // already centered
+    const firm = FIRMS_BY_ID[hoveredFirmId];
+    if (!firm) return;
+    const t = window.setTimeout(() => {
+      setMapTarget({
+        kind: 'preview',
+        lat: firm.lat,
+        lng: firm.lng,
+        key: nextKey(),
+      });
+    }, 220);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hoveredFirmId, focusedFirmId]);
 
   // Keyboard help legend visibility.
   const [helpOpen, setHelpOpen] = useState(false);
@@ -357,15 +379,47 @@ export function App() {
   ) => {
     setFocusedCountry({ alpha2, label: name });
     setFocusedFirmId(null);
+    // Frame to where the firms ACTUALLY sit, not the country's geographic
+    // bbox. Russia → Moscow; Sweden → Stockholm + Gothenburg corridor; etc.
+    // Falls back to the polygon bbox when the country has no firms (the
+    // click handler is gated on COUNTRIES_WITH_FIRMS, so this is just a
+    // safety net).
+    const firmsInCountry = FIRMS.filter((f) => f.countryCode === alpha2);
+    let sw: [number, number] = bboxSW;
+    let ne: [number, number] = bboxNE;
+    if (firmsInCountry.length > 0) {
+      let minLat = Infinity, minLng = Infinity;
+      let maxLat = -Infinity, maxLng = -Infinity;
+      for (const f of firmsInCountry) {
+        if (f.lat < minLat) minLat = f.lat;
+        if (f.lat > maxLat) maxLat = f.lat;
+        if (f.lng < minLng) minLng = f.lng;
+        if (f.lng > maxLng) maxLng = f.lng;
+      }
+      // Single-firm countries (or every firm in the same city) collapse to a
+      // point — pad so flyToBounds has something to fit.
+      const PAD = 0.6; // degrees
+      if (maxLat - minLat < PAD) {
+        const mid = (minLat + maxLat) / 2;
+        minLat = mid - PAD / 2;
+        maxLat = mid + PAD / 2;
+      }
+      if (maxLng - minLng < PAD) {
+        const mid = (minLng + maxLng) / 2;
+        minLng = mid - PAD / 2;
+        maxLng = mid + PAD / 2;
+      }
+      sw = [minLat, minLng];
+      ne = [maxLat, maxLng];
+    }
     setMapTarget({
       kind: 'country',
       clickLat: lat,
       clickLng: lng,
-      bboxSW,
-      bboxNE,
+      bboxSW: sw,
+      bboxNE: ne,
       key: nextKey(),
     });
-    setWorldMode('map');
   };
 
   const clearRegion = () => {
@@ -376,7 +430,6 @@ export function App() {
     } else {
       setMapTarget({ kind: 'world', key: nextKey() });
     }
-    setWorldMode('map');
   };
 
   /** Firm click — pans to firm. Stays at country zoom unless the firm is part
@@ -395,7 +448,6 @@ export function App() {
       isCluster: clusteredFirmIds.has(id),
       key: nextKey(),
     });
-    setWorldMode('map');
   };
 
   const handleOpenJob = (jobId: string) => {
@@ -414,20 +466,33 @@ export function App() {
   if (openJob) {
     return (
       <div className="app">
-        <TopBar profile={profile} onSignIn={signIn} onSignOut={signOut} theme={theme} onToggleTheme={toggleTheme} />
-        {view === 'apply' ? (
-          <JobApply
-            job={openJob}
-            applicantName={profile?.name}
-            onBack={() => setView('detail')}
-          />
-        ) : (
-          <JobDetail
-            job={openJob}
-            onBack={() => setOpenJobId(null)}
-            onApply={() => setView('apply')}
-          />
-        )}
+        <TopBar profile={profile} onRequestSignIn={requestSignIn} onSignOut={signOut} theme={theme} onToggleTheme={toggleTheme} />
+        <Suspense
+          fallback={
+            <div className="lazy-skeleton" aria-hidden="true">
+              <div className="lazy-skeleton-shimmer" />
+            </div>
+          }
+        >
+          {view === 'apply' ? (
+            <JobApply
+              job={openJob}
+              applicantName={profile?.name}
+              onBack={() => setView('detail')}
+            />
+          ) : (
+            <JobDetail
+              job={openJob}
+              onBack={() => setOpenJobId(null)}
+              onApply={() => setView('apply')}
+            />
+          )}
+        </Suspense>
+        <LinkedInSignIn
+          open={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onAuthorized={handleAuthorized}
+        />
       </div>
     );
   }
@@ -435,11 +500,13 @@ export function App() {
   return (
     <div className="app">
       <div className="app-particles" aria-hidden="true">
-        <ParticleField />
+        <Suspense fallback={null}>
+          <ParticleField />
+        </Suspense>
       </div>
       <KbdLegend open={helpOpen} onClose={() => setHelpOpen(false)} />
       <Connectors firmId={hoveredFirmId ?? focusedFirmId} />
-      <TopBar profile={profile} onSignIn={signIn} onSignOut={signOut} theme={theme} onToggleTheme={toggleTheme} />
+      <TopBar profile={profile} onRequestSignIn={requestSignIn} onSignOut={signOut} theme={theme} onToggleTheme={toggleTheme} />
 
       <div className="stage">
         <FirmsList
@@ -490,6 +557,7 @@ export function App() {
           query={query}
           focusedCountryCode={regionAlpha2}
           focusedFirmId={focusedFirmId}
+          hoveredFirmId={hoveredFirmId}
           focusedRegionLabel={regionLabel}
           profileDisciplines={profile?.disciplines}
           matchingJobIds={matchingJobIds}
@@ -504,11 +572,12 @@ export function App() {
           }
           showOnboard={!profile && showOnboard}
           onDismissOnboard={dismissOnboard}
-          onSignIn={signIn}
+          onSignIn={requestSignIn}
           isSeen={isSeen}
           markSeen={markSeen}
           onOpenJob={handleOpenJob}
           onClearRegion={clearRegion}
+          onClearFirm={() => setFocusedFirmId(null)}
           onHoverFirm={setHoveredFirmId}
         />
       </div>
@@ -539,6 +608,11 @@ export function App() {
           {JOBS.length} {JOBS.length === 1 ? 'role' : 'roles'} live
         </span>
       </footer>
+      <LinkedInSignIn
+        open={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onAuthorized={handleAuthorized}
+      />
     </div>
   );
 }

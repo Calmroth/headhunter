@@ -23,6 +23,7 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { NUMERIC_TO_ALPHA2 } from '../data/countryCodeMap';
 import { monogram } from '../utils/monogram';
 import { FirmPopup } from './FirmPopup';
+import { animatePopupIn, pulseClick, pulseHover } from '../utils/animations';
 import './MapView.css';
 
 const COUNTRIES_URL = 'https://unpkg.com/world-atlas@2/countries-10m.json';
@@ -36,17 +37,32 @@ const TILE_ATTR =
   'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, DeLorme, NAVTEQ';
 
 const OXBLOOD = '#b8482e';
-const DEEP_INK = '#2a221d';
 const PAPER = '#f8f4ec';
 const FIT_GREEN = '#3a8c54';
 const DIM_INK = '#9a948d';
+// Warm-paper-adjacent tones used for country highlighting. Hover "lifts" a
+// country onto card paper instead of washing it with ink (see DESIGN.md §4).
+const CARD_TONE = '#f3eee5'; // oklch(95% 0.008 60), one step above warm-paper
+const BORDERLINE = '#c8c0b9'; // oklch(80% 0.01 30), thin country edge
 
-// Four-stage stepwise zoom: world, region, country, city.
-const WORLD_ZOOM = 2;
-const REGION_ZOOM = 5;
-const COUNTRY_ZOOM = 8;
+// Four-stage stepwise zoom, calibrated for the Europe-focused world view.
+// "World" here means "the whole map at rest" — which is Europe, not the planet.
+const WORLD_ZOOM = 4;
+const REGION_ZOOM = 6;
+const COUNTRY_ZOOM = 9;
 const CITY_ZOOM = 12;
 const ZOOM_STEPS = [WORLD_ZOOM, REGION_ZOOM, COUNTRY_ZOOM, CITY_ZOOM] as const;
+
+// Europe bounding box, used as the initial view and the soft pan boundary.
+// SW = south of Spain / Crete; NE = top of Norway / east of Moscow.
+const EUROPE_BOUNDS: L.LatLngBoundsLiteral = [
+  [34, -25],
+  [72, 45],
+];
+const EUROPE_MAX_BOUNDS: L.LatLngBoundsLiteral = [
+  [20, -45],
+  [80, 65],
+];
 
 export type MapTarget =
   | { kind: 'world'; key: number }
@@ -68,7 +84,10 @@ export type MapTarget =
       /** When true, zoom past country level to kommun so clustered dots separate. */
       isCluster?: boolean;
       key: number;
-    };
+    }
+  /** Soft pan to a firm's coords without changing zoom. Used for rail-hover
+      preview so the user can find the dot without disrupting the current view. */
+  | { kind: 'preview'; lat: number; lng: number; key: number };
 
 type Props = {
   focusedFirmId: string | null;
@@ -94,7 +113,7 @@ type Props = {
 
 type CountryFeature = Feature & { id: string; properties: { name: string } };
 
-const initialCenter: [number, number] = [25, 10];
+const initialCenter: [number, number] = [54, 10]; // central Europe
 const initialZoom = WORLD_ZOOM;
 
 export function MapView({
@@ -120,7 +139,15 @@ export function MapView({
         if (cancelled) return;
         const obj = topo.objects.countries as GeometryObject;
         const geo = feature(topo, obj) as FeatureCollection;
-        setCountries(geo.features as CountryFeature[]);
+        // Render only countries with firms. Skipping the rest fixes the
+        // antimeridian-wrap problem at the data layer: Russia, Antarctica,
+        // Fiji, etc. simply don't get drawn, so no polygon ring can stretch
+        // a band across the map.
+        const features = (geo.features as CountryFeature[]).filter((f) => {
+          const alpha2 = NUMERIC_TO_ALPHA2[f.id];
+          return alpha2 && COUNTRIES_WITH_FIRMS.has(alpha2);
+        });
+        setCountries(features);
       })
       .catch(() => {
         if (!cancelled) setCountries([]);
@@ -165,15 +192,52 @@ export function MapView({
     const isFocused = alpha2 && alpha2 === focusedCountryCode;
     const isMatch = alpha2 && matchingCountryIds?.has(alpha2);
     const someFocused = !!focusedCountryCode;
-    // When a country is focused, push others into a dim overlay so the
-    // focused country reads clearly.
     const dimOthers = someFocused && !isFocused;
+
+    // No stroke at rest: the tile's own country borders already provide the
+    // edge. We only draw a border in active states, and we use BORDERLINE
+    // (soft paper tone), never Deep Ink, so the line blends with the map
+    // instead of cutting across it.
+    let strokeColor = BORDERLINE;
+    let strokeWeight = 0;
+    let strokeOpacity = 0;
+    if (isFocused) {
+      strokeColor = BORDERLINE;
+      strokeWeight = 1.25;
+      strokeOpacity = 0.85;
+    } else if (isMatch) {
+      strokeColor = OXBLOOD;
+      strokeWeight = 0.75;
+      strokeOpacity = 0.45;
+    }
+    // dimOthers gets no stroke and no fill — recedes via absence, not via ink.
+
+    // Fills are intentionally a hint, not a wash. Several countries
+    // (Russia, Antarctica, Fiji) carry antimeridian-crossing polygons in
+    // world-atlas; any meaningful fill on them paints a band across the
+    // entire map. So fills stay <= 0.18, and the stroke carries the
+    // affordance.
+    let fillColor = CARD_TONE;
+    let fillOpacity = 0;
+    if (isMatch) {
+      fillColor = OXBLOOD;
+      fillOpacity = 0.05;
+    } else if (isFocused) {
+      fillColor = CARD_TONE;
+      fillOpacity = 0.18;
+    } else if (dimOthers) {
+      // Don't tint dim countries; just let their stroke fade in the
+      // strokeOpacity branch above.
+      fillOpacity = 0;
+    }
+
     return {
-      stroke: isFocused ? true : false,
-      color: DEEP_INK,
-      weight: isFocused ? 0.75 : 0,
-      fillColor: dimOthers ? DEEP_INK : isMatch ? OXBLOOD : DEEP_INK,
-      fillOpacity: dimOthers ? 0.22 : isFocused ? 0.06 : isMatch ? 0.04 : 0,
+      stroke: strokeWeight > 0,
+      color: strokeColor,
+      weight: strokeWeight,
+      opacity: strokeOpacity,
+      fillColor,
+      fillOpacity,
     };
   };
 
@@ -184,7 +248,9 @@ export function MapView({
         zoom={initialZoom}
         minZoom={WORLD_ZOOM}
         maxZoom={CITY_ZOOM}
-        worldCopyJump={true}
+        maxBounds={EUROPE_MAX_BOUNDS}
+        maxBoundsViscosity={0.85}
+        worldCopyJump={false}
         zoomControl={false}
         attributionControl={true}
         scrollWheelZoom={false}
@@ -221,18 +287,39 @@ export function MapView({
               layer.on({
                 mouseover: (e) => {
                   const path = e.target as L.Path;
+                  // Past country zoom, country interactions are off — bail
+                  // before applying any hover ink. Leaflet's .leaflet-interactive
+                  // class re-enables pointer-events on individual paths even
+                  // when the pane has pointer-events:none, so we gate in JS.
+                  const m = (path as unknown as { _map?: L.Map })._map;
+                  if (m && m.getZoom() >= COUNTRY_ZOOM) return;
                   const isFocused = alpha2 === focusedCountryCode;
-                  const otherFocused = !!focusedCountryCode && !isFocused;
+                  // Touch-feedback flash — at continent / world zoom the
+                  // persistent hover-fill turned into a wash as the cursor
+                  // dragged across polygons. Now: brief acknowledgment, then
+                  // auto-fade so the hover doesn't accumulate.
                   path.setStyle({
-                    fillColor: DEEP_INK,
-                    fillOpacity: otherFocused ? 0.24 : isFocused ? 0.08 : 0.04,
+                    fillColor: CARD_TONE,
+                    fillOpacity: isFocused ? 0.055 : 0.035,
                     stroke: true,
-                    color: DEEP_INK,
-                    weight: isFocused ? 1 : 0.6,
+                    color: BORDERLINE,
+                    weight: 1.25,
+                    opacity: 0.225,
                   });
+                  const carrier = layer as L.Layer & { _hhFade?: number };
+                  if (carrier._hhFade) window.clearTimeout(carrier._hhFade);
+                  carrier._hhFade = window.setTimeout(() => {
+                    path.setStyle(countryStyle(cf));
+                    carrier._hhFade = undefined;
+                  }, 520);
                 },
                 mouseout: (e) => {
                   const path = e.target as L.Path;
+                  const carrier = layer as L.Layer & { _hhFade?: number };
+                  if (carrier._hhFade) {
+                    window.clearTimeout(carrier._hhFade);
+                    carrier._hhFade = undefined;
+                  }
                   path.setStyle(countryStyle(cf));
                 },
                 click: (e) => {
@@ -270,6 +357,8 @@ export function MapView({
         <FlyToTarget target={target} />
         <DoubleClickZoomOut onReturnToGlobe={onReturnToGlobe} />
         <SteppedWheelZoom />
+        <CountryInteractionGate />
+        <PopupMountAnimator />
         <PaperBackdrop />
       </MapContainer>
     </div>
@@ -559,9 +648,30 @@ function FirmMarkersLayer({
               fillOpacity,
             }}
             eventHandlers={{
-              click: () => onFirmClick(f.id),
-              mouseover: () => onFirmHover(f.id),
-              mouseout: () => onFirmHover(null),
+              click: (e) => {
+                const marker = e.target as L.CircleMarker;
+                pulseClick(marker, baseRadius);
+                onFirmClick(f.id);
+              },
+              mouseover: (e) => {
+                // Map dot hover is purely local — pulse + (optional) popup
+                // slide. Crucially, do NOT call onFirmHover, otherwise the
+                // firm/job rails sort and pan, and the wiring re-routes
+                // every time the cursor passes a dot. Rails sync only when
+                // the hover originates from a rail row.
+                const marker = e.target as L.CircleMarker;
+                pulseHover(marker, baseRadius);
+                // When a popup is already open on a different firm, slide
+                // it to the hovered firm so the user can scan the map.
+                if (focusedFirmId && focusedFirmId !== f.id) {
+                  onFirmClick(f.id);
+                }
+              },
+              mouseout: (e) => {
+                // Reset radius in case the hover pulse left a stale value.
+                const marker = e.target as L.CircleMarker;
+                marker.setRadius(baseRadius);
+              },
             }}
           >
             {/* Hover-only tooltip: company mark (monogram) + name, nothing else. */}
@@ -686,25 +796,44 @@ function FlyToTarget({ target }: { target: MapTarget | null }) {
     const current = map.getZoom();
 
     if (target.kind === 'world') {
-      if (reduced) map.setView(initialCenter, initialZoom, { animate: false });
-      else map.flyTo(initialCenter, initialZoom, { duration: 1.1 });
+      // "World" = the Europe-fit view: frame to EUROPE_BOUNDS.
+      const bounds = L.latLngBounds(EUROPE_BOUNDS);
+      if (reduced) map.fitBounds(bounds, { padding: [24, 24], animate: false });
+      else map.flyToBounds(bounds, { padding: [24, 24], duration: 1.1 });
       return;
     }
 
     if (target.kind === 'world-at') {
-      // Full world zoom, but centered on a specific coord (e.g. user's location).
+      // Centered Europe view biased toward a coord (e.g. user's location).
       if (reduced) map.setView([target.lat, target.lng], initialZoom, { animate: false });
       else map.flyTo([target.lat, target.lng], initialZoom, { duration: 1.1 });
       return;
     }
 
     if (target.kind === 'country') {
-      // Always settle to the country fit — never zoom past country level.
+      // Fit to the firms-in-country bbox (App passes the firm cluster, not
+      // the polygon). Cap at COUNTRY_ZOOM so the country-highlight border
+      // is still visible at the landing zoom: deeper zooms hide the
+      // countriesPane entirely. Cluster / dot clicks take the user past
+      // country into city view from here.
       const bounds = L.latLngBounds(target.bboxSW, target.bboxNE);
       if (reduced) {
-        map.fitBounds(bounds, { padding: [48, 48], animate: false, maxZoom: COUNTRY_ZOOM + 1 });
+        map.fitBounds(bounds, { padding: [48, 48], animate: false, maxZoom: COUNTRY_ZOOM });
       } else {
-        map.flyToBounds(bounds, { padding: [48, 48], duration: 1.2, maxZoom: COUNTRY_ZOOM + 1 });
+        map.flyToBounds(bounds, { padding: [48, 48], duration: 1.2, maxZoom: COUNTRY_ZOOM });
+      }
+      return;
+    }
+
+    if (target.kind === 'preview') {
+      // Soft pan only — keep zoom. Skips when the point is already on screen
+      // so casual rail-hover doesn't drag the map around when not needed.
+      const ll = L.latLng(target.lat, target.lng);
+      if (map.getBounds().pad(-0.18).contains(ll)) return;
+      if (reduced) {
+        map.panTo(ll, { animate: false });
+      } else {
+        map.panTo(ll, { animate: true, duration: 0.55, easeLinearity: 0.25 });
       }
       return;
     }
@@ -743,6 +872,56 @@ function DoubleClickZoomOut({ onReturnToGlobe }: { onReturnToGlobe?: () => void 
       if (onReturnToGlobe) onReturnToGlobe();
     },
   });
+  return null;
+}
+
+/**
+ * Past country zoom the user is acting on dots and clusters — country
+ * tooltips and country hover-fills become noise. This component toggles a
+ * `.is-zoomed-deep` class on the Leaflet root so CSS can disable country
+ * pointer events and hide the country tooltip at high zoom.
+ */
+/**
+ * Listen for popup mounts inside Leaflet's popupPane and animate them in via
+ * anime.js. Replaces the prior CSS keyframe so the entry can stagger inner
+ * sections rather than just fading the wrapper.
+ */
+function PopupMountAnimator() {
+  const map = useMap();
+  useEffect(() => {
+    const pane = map.getPanes().popupPane;
+    if (!pane) return;
+    const onAdd = (mutations: MutationRecord[]) => {
+      for (const mut of mutations) {
+        mut.addedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) return;
+          if (node.classList.contains('firm-popup-leaflet')) {
+            animatePopupIn(node);
+          }
+        });
+      }
+    };
+    const obs = new MutationObserver(onAdd);
+    obs.observe(pane, { childList: true });
+    return () => obs.disconnect();
+  }, [map]);
+  return null;
+}
+
+function CountryInteractionGate() {
+  const map = useMap();
+  useEffect(() => {
+    const root = map.getContainer();
+    const apply = () => {
+      root.classList.toggle('is-zoomed-deep', map.getZoom() >= COUNTRY_ZOOM);
+    };
+    apply();
+    map.on('zoomend', apply);
+    return () => {
+      map.off('zoomend', apply);
+      root.classList.remove('is-zoomed-deep');
+    };
+  }, [map]);
   return null;
 }
 

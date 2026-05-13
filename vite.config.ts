@@ -1,11 +1,23 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import cesium from 'vite-plugin-cesium';
 
 export default defineConfig({
-  plugins: [react(), cesium()],
+  plugins: [react()],
   server: {
     port: 5173,
     open: true,
+  },
+  build: {
+    target: 'es2020',
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-leaflet': ['leaflet', 'react-leaflet', 'topojson-client'],
+          'vendor-three': ['three'],
+        },
+      },
+    },
   },
 });

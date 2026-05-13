@@ -4,18 +4,30 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 50;
+  /* Sit above the leaflet container's auto-stacking so the wiring reads
+     over the map background and markers. Popup escape is handled below via
+     :has() rather than via z-index, because Leaflet's popup is trapped
+     inside .leaflet-map-pane's transform-induced stacking context and can
+     never outrank a fixed sibling by z-index alone. */
+  z-index: 500;
   overflow: visible;
+  transition: opacity var(--d-fast) var(--ease-out-quart);
+}
+
+/* When any firm popup is open, fade the wiring out so the popup reads
+   unobstructed. :has() lets CSS observe the leaflet-popup mount without
+   threading state through React. */
+body:has(.leaflet-popup) .connectors {
+  opacity: 0;
 }
 
 .connectors-line {
   stroke: var(--oxblood);
   stroke-width: 1.25;
-  stroke-opacity: 0.55;
+  stroke-opacity: 0.65;
   stroke-linecap: round;
   /* Dash pattern that traces in from the firm side. */
   stroke-dasharray: 4 6;
-  filter: drop-shadow(0 0 4px oklch(38% 0.12 25 / 0.35));
   animation: connector-draw 320ms var(--ease-out-quart) both;
   will-change: stroke-dashoffset, opacity;
 }
@@ -26,7 +38,7 @@
     stroke-dashoffset: 60;
   }
   to {
-    stroke-opacity: 0.55;
+    stroke-opacity: 0.65;
     stroke-dashoffset: 0;
   }
 }

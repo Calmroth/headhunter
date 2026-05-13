@@ -7,17 +7,23 @@
 .app-particles {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1; /* sit behind .stage's static flow */
   pointer-events: none;
 }
 .app-particles > .particle-field {
   position: absolute;
   inset: 0;
 }
-.app > .topbar,
-.app > .stage {
+.app > .topbar {
   position: relative;
   z-index: 1;
+}
+/* .stage intentionally does NOT carry z-index. A stacking context here
+   would trap Leaflet popups at internal z 700 below sibling overlays
+   (Connectors at z 50). Particles sit at z -1 instead of stacking against
+   .stage. */
+.app > .stage {
+  position: relative;
 }
 
 @media (max-width: 900px) {
@@ -25,4 +31,35 @@
     min-height: 50vh;
     height: 50vh;
   }
+}
+
+/* Skeleton shown while JobDetail/JobApply chunks resolve. Tonal, no spinner —
+   a single hairline bar that breathes via a slow shimmer so the wait reads
+   intentional rather than broken. */
+.lazy-skeleton {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  background: var(--warm-paper);
+}
+.lazy-skeleton-shimmer {
+  width: min(32rem, 60vw);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--hairline) 30%,
+    var(--quiet-ink) 50%,
+    var(--hairline) 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: lazy-shimmer 1400ms var(--ease-out-quart) infinite;
+}
+@keyframes lazy-shimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lazy-skeleton-shimmer { animation: none; opacity: 0.4; }
 }

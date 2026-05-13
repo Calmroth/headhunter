@@ -133,6 +133,28 @@
   }
 }
 
+/* Past country zoom the country GeoJSON is hidden entirely. The world-atlas
+   10m TopoJSON is far coarser than the Esri tile coastline at city zoom, so
+   any visible stroke reads as a crude polygon outline that disagrees with
+   the underlying tile. The tile already carries the real boundary at this
+   scale; we let it do the work. */
+.leaflet-countriesPane-pane {
+  transition: opacity var(--d-base) var(--ease-out-quart);
+}
+.leaflet-root.is-zoomed-deep .leaflet-countriesPane-pane {
+  pointer-events: none;
+  opacity: 0;
+}
+/* Leaflet's .leaflet-interactive class re-asserts pointer-events on each path,
+   overriding the pane. Defeat it explicitly so country polygons cannot receive
+   hover events past country zoom. */
+.leaflet-root.is-zoomed-deep .leaflet-countriesPane-pane .leaflet-interactive {
+  pointer-events: none !important;
+}
+.leaflet-root.is-zoomed-deep .country-tooltip {
+  display: none !important;
+}
+
 /* Country tooltip — paper-toned chip that follows the cursor. */
 .country-tooltip.leaflet-tooltip {
   background: var(--warm-paper);

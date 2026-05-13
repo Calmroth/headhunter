@@ -32,6 +32,12 @@ export function FirmsList({
   onHoverFirm,
   onSelectFirm,
 }: Props) {
+  // The previewed firm — clicked (focused) or rail-hovered — floats to the
+  // top of the list. Rail-hover comes via hoveredFirmId; map-dot hover no
+  // longer feeds into this state, so the list stays still while the user
+  // scans the map.
+  const previewId = focusedFirmId ?? hoveredFirmId ?? null;
+
   const firms = useMemo(() => {
     const list = (focusedCountryCode
       ? FIRMS.filter((f) => f.countryCode === focusedCountryCode)
@@ -42,6 +48,10 @@ export function FirmsList({
     for (const j of JOBS) counts.set(j.firmId, (counts.get(j.firmId) ?? 0) + 1);
 
     list.sort((a, b) => {
+      // Hovered/focused firm pinned to the top.
+      const aPrev = previewId === a.id ? 1 : 0;
+      const bPrev = previewId === b.id ? 1 : 0;
+      if (aPrev !== bPrev) return bPrev - aPrev;
       const aHome = residentCity && a.city === residentCity ? 1 : 0;
       const bHome = residentCity && b.city === residentCity ? 1 : 0;
       if (aHome !== bHome) return bHome - aHome;
@@ -52,7 +62,7 @@ export function FirmsList({
     });
 
     return list.map((f) => ({ firm: f, roleCount: counts.get(f.id) ?? 0 }));
-  }, [focusedCountryCode, residentCity, filteredFirmIds]);
+  }, [focusedCountryCode, residentCity, filteredFirmIds, previewId]);
 
   const heading = focusedCountryCode ? 'Consultancies in region' : 'Featured consultancies';
 
@@ -102,13 +112,13 @@ export function FirmsList({
     );
     node?.scrollIntoView({ block: 'nearest' });
   }, [kbdIndex, firms]);
+  // Always pin scroll to top when the previewed firm changes — sort-to-top
+  // puts it there already, so we just need to make sure it's visible without
+  // dragging the user's scroll position around.
   useEffect(() => {
-    if (!hoveredFirmId || !scrollRef.current) return;
-    const row = scrollRef.current.querySelector<HTMLElement>(
-      `[data-firm-id="${CSS.escape(hoveredFirmId)}"]`
-    );
-    if (row) row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }, [hoveredFirmId]);
+    if (!previewId || !scrollRef.current) return;
+    scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [previewId]);
 
   return (
     <aside className="firms" aria-labelledby="firms-heading">
