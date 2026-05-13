@@ -537,11 +537,14 @@ function FirmMarkersLayer({
             const onAreaClick = () => {
               if (!c.bounds) return;
               onFirmHover(null);
-              map.flyToBounds(c.bounds, {
-                padding: [80, 80],
-                duration: 0.9,
-                maxZoom: CITY_ZOOM,
-              });
+              // Never zoom OUT on a single click. flyToBounds picks the
+              // optimal fit zoom which can be shallower than current view —
+              // if so, pan-only at current zoom. Otherwise zoom in to the
+              // city, capped at CITY_ZOOM.
+              const currentZoom = map.getZoom();
+              const fitZoom = map.getBoundsZoom(c.bounds, false, L.point(80, 80));
+              const targetZoom = Math.max(currentZoom, Math.min(fitZoom, CITY_ZOOM));
+              map.flyTo(c.bounds.getCenter(), targetZoom, { duration: 0.9 });
             };
             return (
               <Fragment key={`cluster-${c.key}`}>
@@ -840,8 +843,14 @@ function FlyToTarget({ target }: { target: MapTarget | null }) {
 
     // 'region' / 'firm': normally cap zoom at COUNTRY_ZOOM. Clustered firms
     // (same city) push to street level so dots separate and labels appear.
+    //
+    // RULE: single clicks must never zoom OUT. Only double-click or explicit
+    // UI (clear-region, clear-filter) may reduce zoom. So clamp the target
+    // zoom to be no shallower than the user's current zoom — if they're
+    // already deeper than COUNTRY/CITY_ZOOM, pan only at current zoom.
     const isCluster = target.kind === 'firm' && !!target.isCluster;
-    const targetZoom = isCluster ? CITY_ZOOM : COUNTRY_ZOOM;
+    const desiredZoom = isCluster ? CITY_ZOOM : COUNTRY_ZOOM;
+    const targetZoom = Math.max(current, desiredZoom);
     if (reduced) {
       map.setView([target.lat, target.lng], targetZoom, { animate: false });
     } else if (current === targetZoom) {
