@@ -20,6 +20,12 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" />
   </head>
   <body>
+    <script>
+      // Pre-paint flag so the splash-intro targets are hidden until the JS
+      // orchestration takes over. Removed by playSplashIntro() (or immediately,
+      // if prefers-reduced-motion).
+      document.documentElement.classList.add('splash-pending');
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

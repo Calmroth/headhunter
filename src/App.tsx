@@ -1,4 +1,5 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { playSplashIntro } from './utils/animations';
 import { TopBar } from './components/TopBar';
 import { LinkedInSignIn } from './components/LinkedInSignIn';
 import { MapView, type MapTarget } from './components/MapView';
@@ -190,6 +191,15 @@ export function App() {
 
   // Keyboard help legend visibility.
   const [helpOpen, setHelpOpen] = useState(false);
+
+  // First-paint splash orchestration. useLayoutEffect (not useEffect) so the
+  // timeline starts before the browser commits the first paint of the home
+  // view — keeps the splash-pending CSS pre-hide from flashing visible.
+  // Idempotent inside playSplashIntro(); ignores the openJob render branch
+  // because that branch returns early and never reaches this hook anyway.
+  useLayoutEffect(() => {
+    playSplashIntro();
+  }, []);
 
   // Global keyboard accelerators. Skips keys when focus is in an input/textarea.
   useEffect(() => {

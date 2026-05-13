@@ -1,4 +1,4 @@
-import { animate, stagger } from 'animejs';
+import { animate, createTimeline, stagger } from 'animejs';
 import type L from 'leaflet';
 
 const prefersReduce = () =>
@@ -133,4 +133,129 @@ export function animatePopupIn(popupEl: HTMLElement) {
       ease: 'outQuart',
     });
   }
+}
+
+/**
+ * First-paint splash orchestration. Choreographs the brand chrome of the home
+ * view as one timeline: wordmark → topbar actions → three columns (center
+ * leads, rails follow) → searchbar → footer.
+ *
+ * Driven by `html.splash-pending` (set in index.html before first paint) so
+ * the targets are hidden until the timeline overrides their opacity. The
+ * class is removed as soon as the timeline begins, handing visibility
+ * control to anime.js.
+ *
+ * Idempotent — safe to call more than once; subsequent calls are no-ops via
+ * the `splashPlayed` module-level flag.
+ *
+ * Respects prefers-reduced-motion: clears `splash-pending` and returns,
+ * leaving the chrome at its natural opacity.
+ */
+let splashPlayed = false;
+
+export function playSplashIntro() {
+  if (splashPlayed) return;
+  splashPlayed = true;
+
+  const root = document.documentElement;
+
+  if (prefersReduce()) {
+    root.classList.remove('splash-pending');
+    return;
+  }
+
+  // GPU-prime the targets so transform/opacity don't trigger layout. Cleared
+  // on timeline completion to avoid leaking will-change long-term.
+  const primed: HTMLElement[] = [];
+  const prime = (selector: string) => {
+    document.querySelectorAll<HTMLElement>(selector).forEach((el) => {
+      el.style.willChange = 'transform, opacity';
+      primed.push(el);
+    });
+  };
+  prime('.wordmark');
+  prime('.topbar-actions > *');
+  prime('.stage > .firms');
+  prime('.stage > .center-stage');
+  prime('.stage > .jobs');
+  prime('.search');
+  prime('.app-footer');
+
+  const tl = createTimeline({
+    defaults: { ease: 'outQuart' },
+    onComplete: () => {
+      for (const el of primed) el.style.willChange = '';
+    },
+  });
+
+  // Wordmark — the brand stamp lands first. Long, quiet rise.
+  tl.add(
+    '.wordmark',
+    {
+      opacity: [0, 1],
+      translateY: [12, 0],
+      duration: 720,
+    },
+    0
+  );
+
+  // TopBar trailing actions (theme toggle, sign-in). Drift in from the right
+  // so the entry direction reads as "settling into place" rather than "popping".
+  tl.add(
+    '.topbar-actions > *',
+    {
+      opacity: [0, 1],
+      translateX: [10, 0],
+      duration: 520,
+      delay: stagger(80),
+    },
+    120
+  );
+
+  // Three columns. `from: 'center'` means MapView leads and the two rails
+  // arrive a beat later — the map *is* the product, so the eye lands there
+  // first and the supporting rails fill in around it.
+  tl.add(
+    '.stage > .firms, .stage > .center-stage, .stage > .jobs',
+    {
+      opacity: [0, 1],
+      translateY: [16, 0],
+      duration: 760,
+      delay: stagger(90, { from: 'center' }),
+    },
+    220
+  );
+
+  // Search bar tucks under the map once the column has settled. outExpo gives
+  // it a slightly punchier deceleration than the rest — it's the only
+  // interactive surface in the entry, and the extra emphasis advertises that.
+  tl.add(
+    '.search',
+    {
+      opacity: [0, 1],
+      translateY: [16, 0],
+      scale: [0.985, 1],
+      duration: 620,
+      ease: 'outExpo',
+    },
+    480
+  );
+
+  // Footer byline last. Quietest curve, smallest distance — it's just
+  // metadata, doesn't deserve attention, but shouldn't pop in cold either.
+  tl.add(
+    '.app-footer',
+    {
+      opacity: [0, 1],
+      translateY: [6, 0],
+      duration: 480,
+      ease: 'outQuad',
+    },
+    560
+  );
+
+  // Hand opacity control over to anime.js — strip the CSS pre-hide. Done
+  // immediately so the from-values in the timeline's first frame take effect
+  // without a perceptible flash.
+  root.classList.remove('splash-pending');
 }

@@ -79,6 +79,35 @@ a {
   border: 2px solid transparent;
 }
 
+/* Splash-intro pre-hide. The inline script in index.html sets
+   `html.splash-pending` before first paint; playSplashIntro() removes it as
+   the orchestrated timeline starts. This prevents the brand chrome from
+   flashing into view before the entry animation runs. Reduced-motion users
+   skip the orchestration entirely (see below). */
+.splash-pending .wordmark,
+.splash-pending .topbar-actions > *,
+.splash-pending .stage > .firms,
+.splash-pending .stage > .center-stage,
+.splash-pending .stage > .jobs,
+.splash-pending .search,
+.splash-pending .app-footer {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced-motion: don't pre-hide. playSplashIntro() will strip the class
+     anyway, but this guards against the FOUC window between paint and JS for
+     users who explicitly opted out of motion. */
+  .splash-pending .wordmark,
+  .splash-pending .topbar-actions > *,
+  .splash-pending .stage > .firms,
+  .splash-pending .stage > .center-stage,
+  .splash-pending .stage > .jobs,
+  .splash-pending .search,
+  .splash-pending .app-footer {
+    opacity: 1;
+  }
+}
+
 /* Layout shell */
 .app {
   display: grid;
