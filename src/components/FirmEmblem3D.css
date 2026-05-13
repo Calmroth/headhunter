@@ -1,0 +1,13 @@
+.firm-emblem-3d {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 220px;
+  pointer-events: none;
+}
+
+.firm-emblem-3d--unsupported {
+  background:
+    radial-gradient(circle, oklch(38% 0.12 25 / 0.18), transparent 70%);
+  border-radius: var(--rad-md);
+}

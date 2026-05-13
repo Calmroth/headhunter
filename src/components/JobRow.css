@@ -1,0 +1,137 @@
+.job-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.25rem 1rem 1.5rem;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--warm-paper);
+  transition: background-color var(--d-fast) var(--ease-out-quart);
+  cursor: pointer;
+}
+.job-row:hover {
+  background: var(--card-tone);
+}
+.job-row:focus-visible {
+  background: var(--card-tone);
+  outline: none;
+}
+.job-row.is-kbd-focused {
+  background: var(--card-tone-hover);
+}
+.job-row.is-kbd-focused .job-row-title {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--deep-ink);
+}
+
+/* NEW mark: 4px Oxblood dot at the leading edge. Not a stripe — honors the absolute ban. */
+.job-row-mark {
+  position: absolute;
+  left: 0.625rem;
+  top: 1.375rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--oxblood);
+}
+.job-row-mark::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  background: var(--oxblood);
+  opacity: 0.35;
+  animation: job-new-pulse 2200ms var(--ease-out-quart) infinite;
+  will-change: transform, opacity;
+}
+@keyframes job-new-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  70% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .job-row-mark::before {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+.job-row.is-new {
+  background: linear-gradient(to right, var(--oxblood-soft) 0%, transparent 25%);
+}
+.job-row.is-new:hover {
+  background:
+    linear-gradient(to right, var(--oxblood-soft) 0%, transparent 25%),
+    var(--card-tone);
+}
+
+.job-row-title {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--deep-ink);
+  letter-spacing: -0.005em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.job-row-firm {
+  font-size: 0.9375rem;
+  color: var(--deep-ink);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-row-meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet-ink);
+  margin-top: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.job-row-new {
+  color: var(--oxblood);
+  font-weight: 500;
+}
+
+.job-row-fit {
+  color: oklch(45% 0.14 150);
+  font-weight: 600;
+}
+
+/* Match treatment: a quiet full-row tint and a typographic mark in the meta.
+   No side stripes; no color-as-only signal. */
+.job-row.is-match {
+  background: oklch(45% 0.14 150 / 0.04);
+}
+.job-row.is-match:hover {
+  background: oklch(45% 0.14 150 / 0.08);
+}
+.job-row.is-match.is-new {
+  background:
+    linear-gradient(to right, var(--oxblood-soft) 0%, transparent 25%),
+    oklch(45% 0.14 150 / 0.04);
+}

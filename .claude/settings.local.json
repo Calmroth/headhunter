@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Command *)",
+      "PowerShell(npm *)",
+      "PowerShell(if \\(Test-Path .env.local\\) { Get-Content .env.local | Select-String -Pattern \"VITE_CESIUM_ION_TOKEN\" | ForEach-Object { \\($_ -split '=', 2\\)[0] + '=\\(' + \\(\\(\\($_ -split '=', 2\\)[1]\\).Length\\) + ' chars\\)' } } else { 'no .env.local present' })",
+      "PowerShell(if \\($env:VITE_CESIUM_ION_TOKEN\\) { 'env var set \\(' + $env:VITE_CESIUM_ION_TOKEN.Length + ' chars\\)' } else { 'no shell env var either' })",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 80)",
+      "PowerShell(npx tsc --noEmit; \"EXIT=$LASTEXITCODE\")",
+      "PowerShell(gh auth *)",
+      "PowerShell(git *)"
+    ]
+  }
+}

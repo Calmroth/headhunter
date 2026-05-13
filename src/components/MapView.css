@@ -1,0 +1,297 @@
+.map-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.leaflet-root {
+  height: 100%;
+  width: 100%;
+  background: var(--warm-paper);
+}
+
+/* Warm the neutral Positron tiles toward our paper aesthetic. */
+.leaflet-tile-pane {
+  filter: sepia(0.12) saturate(0.92) contrast(0.96) brightness(1.02);
+}
+
+/* Dark theme — invert tiles to a dark base with a warm tint. */
+:root[data-theme='dark'] .leaflet-tile-pane {
+  filter: invert(0.92) hue-rotate(180deg) saturate(0.6) brightness(0.95);
+}
+
+.leaflet-container {
+  font-family: var(--font-body);
+}
+
+/* Reset Leaflet's bright blue link colors inside attribution. */
+.leaflet-control-attribution {
+  background: oklch(97% 0.008 60 / 0.85) !important;
+  color: var(--quiet-ink) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.625rem !important;
+  letter-spacing: 0.04em;
+  padding: 2px 6px !important;
+  border-radius: var(--rad-sm);
+}
+.leaflet-control-attribution a {
+  color: var(--quiet-ink) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.leaflet-control-attribution a:hover {
+  color: var(--deep-ink) !important;
+}
+
+/* No square focus ring on SVG paths — selection state is conveyed by
+   marker color/size and the open popup. */
+.leaflet-interactive:focus,
+.leaflet-interactive:focus-visible {
+  outline: none;
+}
+/* Some browsers add a default dotted box on focused SVG inside Leaflet. */
+.leaflet-container svg:focus,
+.leaflet-container svg:focus-visible,
+.leaflet-container path:focus,
+.leaflet-container path:focus-visible {
+  outline: none;
+}
+
+/* Firm marker — transitions live on the SVG path. The radius (d-attribute) isn't
+   transitionable in CSS, so visual "grow" comes from transform: scale. */
+.firm-marker {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(1);
+  transition:
+    transform 220ms cubic-bezier(0.25, 1, 0.5, 1),
+    fill 200ms cubic-bezier(0.25, 1, 0.5, 1),
+    fill-opacity 200ms cubic-bezier(0.25, 1, 0.5, 1),
+    stroke 200ms cubic-bezier(0.25, 1, 0.5, 1),
+    stroke-width 200ms cubic-bezier(0.25, 1, 0.5, 1),
+    filter 220ms cubic-bezier(0.25, 1, 0.5, 1);
+  cursor: pointer;
+  animation: firm-marker-drop 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: var(--marker-delay, 0ms);
+}
+@keyframes firm-marker-drop {
+  from {
+    transform: scale(0) translateY(-12px);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .firm-marker {
+    animation: none;
+  }
+}
+.firm-marker--hover {
+  transform: scale(1.35);
+}
+/* Selection is conveyed by size growth + a Deep Ink ring rendered via stroke,
+   never by a glow halo (see DESIGN.md §4 Flat-By-Default Rule). */
+.firm-marker--active {
+  transform: scale(1.4);
+  stroke: var(--deep-ink) !important;
+  stroke-width: 2 !important;
+  stroke-opacity: 0.85;
+}
+:root[data-theme='dark'] .firm-marker--active {
+  stroke: var(--warm-paper) !important;
+  stroke-opacity: 0.9;
+}
+.firm-marker--dim {
+  cursor: default;
+}
+
+/* Keyboard focus: replace the stripped browser outline with a visible Deep Ink
+   ring drawn via stroke. Pairs with WCAG 2.2 AA non-text contrast (≥3:1). */
+.leaflet-interactive.firm-marker:focus-visible {
+  outline: none;
+  stroke: var(--deep-ink) !important;
+  stroke-width: 2 !important;
+  stroke-opacity: 1;
+}
+:root[data-theme='dark'] .leaflet-interactive.firm-marker:focus-visible {
+  stroke: var(--warm-paper) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .firm-marker,
+  .firm-marker--hover,
+  .firm-marker--active {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Country tooltip — paper-toned chip that follows the cursor. */
+.country-tooltip.leaflet-tooltip {
+  background: var(--warm-paper);
+  color: var(--deep-ink);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-ambient);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--rad-sm);
+  font-family: var(--font-body);
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+.country-tooltip.leaflet-tooltip::before {
+  border-top-color: var(--warm-paper);
+}
+.country-tooltip-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  letter-spacing: -0.005em;
+  color: var(--deep-ink);
+}
+.country-tooltip-meta {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet-ink);
+}
+
+/* Custom tooltip — overrides Leaflet's default white box. */
+.map-tooltip.leaflet-tooltip {
+  background: var(--deep-ink);
+  color: var(--warm-paper);
+  border: 0;
+  box-shadow: var(--shadow-ambient);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--rad-sm);
+  font-family: var(--font-body);
+}
+.map-tooltip.leaflet-tooltip::before {
+  border-top-color: var(--deep-ink);
+}
+.map-tooltip-body {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 11rem;
+  max-width: 18rem;
+}
+
+.map-tooltip-mark {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  background: var(--warm-paper);
+  color: var(--deep-ink);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+  border-radius: var(--rad-sm);
+  text-transform: none;
+}
+
+.map-tooltip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.map-tooltip-text .serif {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--warm-paper);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.map-tooltip-text .mono {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: oklch(85% 0.008 60 / 0.85);
+}
+
+/* Cluster city-area marker: a soft disc that owns the click for the whole
+   city. The core dot inside is non-interactive (pointer-events:none) so
+   every hit lands on the area. */
+.cluster-marker {
+  cursor: pointer;
+  transition:
+    transform var(--d-base) var(--ease-out-quart),
+    fill-opacity var(--d-base) var(--ease-out-quart),
+    stroke-opacity var(--d-base) var(--ease-out-quart);
+}
+.cluster-marker:hover {
+  /* The area highlights, not the core. */
+  fill-opacity: 0.18 !important;
+  stroke-opacity: 0.85 !important;
+}
+.cluster-core {
+  pointer-events: none;
+  /* Inherit the same scale curve as firm markers, but no hover scale here —
+     the area provides the affordance, the core stays steady. */
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Cluster tooltip — city name (serif) + count meta (mono caps). */
+.cluster-tooltip.leaflet-tooltip {
+  background: var(--warm-paper);
+  color: var(--deep-ink);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-ambient);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--rad-sm);
+  font-family: var(--font-body);
+}
+.cluster-tooltip.leaflet-tooltip::before {
+  border-top-color: var(--warm-paper);
+}
+.cluster-tooltip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 7rem;
+  max-width: 16rem;
+}
+.cluster-tooltip-city {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  letter-spacing: -0.005em;
+  color: var(--deep-ink);
+}
+.cluster-tooltip-meta {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet-ink);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

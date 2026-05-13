@@ -1,0 +1,82 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--warm-paper);
+  height: var(--topbar-h);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--deep-ink);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.signin {
+  font-size: 0.9375rem;
+  color: var(--deep-ink);
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--hairline);
+  border-radius: var(--rad-sm);
+  background: var(--warm-paper);
+  transition: border-color var(--d-fast) var(--ease-out-quart),
+    background-color var(--d-fast) var(--ease-out-quart);
+}
+.signin:hover {
+  border-color: var(--deep-ink);
+}
+.signin:active {
+  background: var(--card-tone);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--card-tone);
+  border: 1px solid var(--hairline);
+  display: grid;
+  place-items: center;
+  transition: border-color var(--d-fast) var(--ease-out-quart);
+}
+.avatar:hover {
+  border-color: var(--deep-ink);
+}
+.avatar-initials {
+  font-size: 0.6875rem;
+  color: var(--deep-ink);
+  letter-spacing: 0.04em;
+}
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--card-tone);
+  border: 1px solid var(--hairline);
+  color: var(--deep-ink);
+  cursor: pointer;
+  transition:
+    border-color var(--d-fast) var(--ease-out-quart),
+    background var(--d-fast) var(--ease-out-quart);
+}
+.theme-toggle:hover {
+  border-color: var(--deep-ink);
+  background: var(--card-tone-hover);
+}
+.theme-toggle-icon {
+  font-size: 1rem;
+  line-height: 1;
+}

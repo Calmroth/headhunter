@@ -1,0 +1,39 @@
+.connectors {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  overflow: visible;
+}
+
+.connectors-line {
+  stroke: var(--oxblood);
+  stroke-width: 1.25;
+  stroke-opacity: 0.55;
+  stroke-linecap: round;
+  /* Dash pattern that traces in from the firm side. */
+  stroke-dasharray: 4 6;
+  filter: drop-shadow(0 0 4px oklch(38% 0.12 25 / 0.35));
+  animation: connector-draw 320ms var(--ease-out-quart) both;
+  will-change: stroke-dashoffset, opacity;
+}
+
+@keyframes connector-draw {
+  from {
+    stroke-opacity: 0;
+    stroke-dashoffset: 60;
+  }
+  to {
+    stroke-opacity: 0.55;
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connectors-line {
+    animation: none;
+    stroke-opacity: 0.4;
+  }
+}

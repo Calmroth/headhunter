@@ -1,0 +1,161 @@
+.firms {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--hairline);
+  background: var(--warm-paper);
+}
+
+.firms-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.firms-label {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--deep-ink);
+}
+.firms-label-count {
+  display: inline-block;
+  animation: hh-count-pulse 360ms var(--ease-out-quart);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .firms-label-count { animation: none; }
+}
+
+.firms-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.firms-empty {
+  margin: 0;
+  padding: 2rem 1.5rem;
+  font-size: 0.9375rem;
+  color: var(--quiet-ink);
+  max-width: 28ch;
+}
+
+.firm-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1.25rem 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--warm-paper);
+  cursor: pointer;
+  transition: background-color var(--d-fast) var(--ease-out-quart);
+}
+.firm-row:hover,
+.firm-row.is-hovered {
+  background: var(--card-tone);
+}
+.firm-row:focus-visible {
+  background: var(--card-tone);
+  outline: none;
+}
+.firm-row.is-active {
+  background: var(--card-tone-hover);
+}
+.firm-row.is-active .firm-row-name {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--deep-ink);
+}
+.firm-row.is-kbd-focused {
+  background: var(--card-tone-hover);
+}
+.firm-row.is-kbd-focused .firm-row-name {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--deep-ink);
+}
+.firm-row.is-hovered:not(.is-active) .firm-row-name {
+  color: var(--oxblood);
+}
+
+/* Profile fit treatment: full-row tint in the same green used on the map,
+   plus the FIT typographic mark already rendered in the meta row.
+   No side stripes; never color-as-only signal. */
+.firm-row.is-match {
+  background: oklch(45% 0.14 150 / 0.05);
+}
+.firm-row.is-match:hover,
+.firm-row.is-match.is-hovered {
+  background: oklch(45% 0.14 150 / 0.09);
+}
+.firm-row.is-match.is-active {
+  background: oklch(45% 0.14 150 / 0.12);
+}
+.firm-row.is-match .firm-row-meta {
+  color: oklch(35% 0.14 150);
+}
+.firm-row.is-dim .firm-row-name,
+.firm-row.is-dim .firm-row-mark {
+  opacity: 0.55;
+}
+.firm-row.is-dim .firm-row-mark {
+  background: var(--quiet-ink);
+}
+
+.firm-row-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--rad-sm);
+  background: var(--deep-ink);
+  color: var(--warm-paper);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+.firm-row.is-active .firm-row-mark,
+.firm-row.is-hovered .firm-row-mark {
+  background: var(--oxblood);
+}
+
+.firm-row-body {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.firm-row-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--deep-ink);
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.firm-row-meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1100px) {
+  .firms {
+    border-right: 0;
+    border-top: 1px solid var(--hairline);
+  }
+}

@@ -1,0 +1,28 @@
+.center-stage {
+  position: relative;
+  min-height: 0;
+  background: var(--warm-paper);
+}
+
+.app-particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.app-particles > .particle-field {
+  position: absolute;
+  inset: 0;
+}
+.app > .topbar,
+.app > .stage {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 900px) {
+  .center-stage {
+    min-height: 50vh;
+    height: 50vh;
+  }
+}

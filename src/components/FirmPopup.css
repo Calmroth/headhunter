@@ -1,0 +1,222 @@
+.firm-popup {
+  min-width: 17rem;
+  max-width: 22rem;
+  font-family: var(--font-body);
+  color: var(--deep-ink);
+}
+
+.firm-popup-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 0.875rem 0.75rem;
+}
+
+.firm-popup-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--rad-sm);
+  background: var(--deep-ink);
+  color: var(--warm-paper);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+
+.firm-popup-headtext {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.firm-popup-name {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  color: var(--deep-ink);
+}
+
+.firm-popup-meta {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--quiet-ink);
+}
+
+.firm-popup-website {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--deep-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--hairline);
+  transition: text-decoration-color var(--d-fast) var(--ease-out-quart),
+    color var(--d-fast) var(--ease-out-quart);
+  width: fit-content;
+}
+.firm-popup-website:hover {
+  text-decoration-color: var(--deep-ink);
+  color: var(--oxblood);
+}
+.firm-popup-website svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.firm-popup-divider {
+  height: 1px;
+  background: var(--hairline);
+  margin: 0 0.875rem;
+}
+
+.firm-popup-section {
+  padding: 0.875rem;
+}
+
+.firm-popup-section-label {
+  margin: 0 0 0.625rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--quiet-ink);
+}
+
+.firm-popup-roles {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.firm-popup-role {
+  display: grid;
+  gap: 0.125rem;
+}
+.firm-popup-role-title {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--deep-ink);
+  letter-spacing: -0.005em;
+  line-height: 1.25;
+}
+.firm-popup-role-meta {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--quiet-ink);
+}
+.firm-popup-role-more {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--quiet-ink);
+  margin-top: 0.25rem;
+}
+
+.firm-popup-contacts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.firm-popup-contact {
+  display: grid;
+  gap: 0.1875rem;
+}
+
+.firm-popup-contact-name {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--deep-ink);
+  letter-spacing: -0.005em;
+}
+
+.firm-popup-contact-role {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--quiet-ink);
+}
+
+.firm-popup-contact-email {
+  font-size: 0.8125rem;
+  color: var(--deep-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--hairline);
+  transition: text-decoration-color var(--d-fast) var(--ease-out-quart);
+}
+.firm-popup-contact-email:hover {
+  text-decoration-color: var(--deep-ink);
+}
+
+.firm-popup-contact-linkedin {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--oxblood);
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.firm-popup-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--quiet-ink);
+  line-height: 1.45;
+  max-width: 32ch;
+}
+.firm-popup-empty .mono {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--deep-ink);
+  background: var(--card-tone);
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--rad-sm);
+  text-transform: uppercase;
+}
+
+/* Override Leaflet default popup chrome so it lands on warm paper. */
+.leaflet-popup.firm-popup-leaflet .leaflet-popup-content-wrapper {
+  background: var(--warm-paper);
+  color: var(--deep-ink);
+  border-radius: var(--rad-md);
+  box-shadow: var(--shadow-structural);
+  padding: 0;
+  border: 1px solid var(--hairline);
+}
+.leaflet-popup.firm-popup-leaflet .leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}
+.leaflet-popup.firm-popup-leaflet .leaflet-popup-tip {
+  background: var(--warm-paper);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--shadow-ambient);
+}
+.leaflet-popup.firm-popup-leaflet .leaflet-popup-close-button {
+  color: var(--quiet-ink);
+  padding: 0.5rem 0.5rem 0 0;
+  font-size: 1rem;
+}
+.leaflet-popup.firm-popup-leaflet .leaflet-popup-close-button:hover {
+  color: var(--deep-ink);
+}

@@ -1,0 +1,129 @@
+.jobs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--hairline);
+  background: var(--warm-paper);
+}
+
+.jobs-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.jobs-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.jobs-label {
+  font-size: 0.6875rem;
+  color: var(--deep-ink);
+}
+.jobs-label-count {
+  display: inline-block;
+  animation: hh-count-pulse 360ms var(--ease-out-quart);
+  will-change: transform;
+}
+@keyframes hh-count-pulse {
+  0% { transform: scale(1); color: var(--deep-ink); }
+  30% { transform: scale(1.12); color: var(--oxblood); }
+  100% { transform: scale(1); color: var(--deep-ink); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jobs-label-count { animation: none; }
+}
+
+.jobs-filter-meta {
+  margin: 0.5rem 0 0;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--quiet-ink);
+}
+
+.jobs-onboard {
+  position: relative;
+  margin: 0.75rem 1.25rem 0.5rem;
+  padding: 0.875rem 2.25rem 0.875rem 1rem;
+  background: var(--card-tone);
+  border: 1px solid var(--hairline);
+  border-radius: var(--rad-sm);
+}
+.jobs-onboard-body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--quiet-ink);
+  max-width: 30ch;
+}
+.jobs-onboard-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: var(--oxblood);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--oxblood-ring);
+  transition: text-decoration-color var(--d-fast) var(--ease-out-quart);
+}
+.jobs-onboard-link:hover {
+  text-decoration-color: var(--oxblood);
+}
+.jobs-onboard-dismiss {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.5rem;
+  background: transparent;
+  border: 0;
+  color: var(--quiet-ink);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: var(--rad-sm);
+  cursor: pointer;
+  transition: color var(--d-fast) var(--ease-out-quart);
+}
+.jobs-onboard-dismiss:hover {
+  color: var(--deep-ink);
+}
+
+.jobs-clear {
+  font-size: 0.6875rem;
+  color: var(--quiet-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--d-fast) var(--ease-out-quart);
+}
+.jobs-clear:hover {
+  color: var(--deep-ink);
+}
+
+.jobs-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.jobs-empty {
+  padding: 2.5rem 1.5rem;
+}
+
+.jobs-empty-body {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--quiet-ink);
+  line-height: 1.55;
+  max-width: 32ch;
+}
+
+@media (max-width: 900px) {
+  .jobs {
+    border-left: 0;
+    border-top: 1px solid var(--hairline);
+    min-height: 60vh;
+  }
+}
