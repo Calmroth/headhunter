@@ -93,20 +93,42 @@
     animation: none;
   }
 }
+/* Hover: dot grows, brightens to full saturation, and breathes. The breathe
+   is a fill-opacity oscillation 1.0 -> 0.75 -> 1.0; CSS applies the timing
+   function per-segment, so the curve is outQuart on each leg (never in-out
+   per DESIGN.md). */
 .firm-marker--hover {
   transform: scale(1.35);
+  fill-opacity: 1 !important;
+  animation: firm-marker-drop 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards,
+             firm-dot-pulse 1400ms var(--ease-out-quart) infinite;
 }
-/* Selection is conveyed by size growth + a Deep Ink ring rendered via stroke,
-   never by a glow halo (see DESIGN.md §4 Flat-By-Default Rule). */
+/* Active: same brightening as hover plus a Deep Ink ring (DESIGN.md §4
+   Flat-By-Default Rule — selection by stroke, not glow) and a tighter
+   pulse cadence so the active state reads as more insistent than a hover. */
 .firm-marker--active {
   transform: scale(1.4);
+  fill-opacity: 1 !important;
   stroke: var(--deep-ink) !important;
   stroke-width: 2 !important;
   stroke-opacity: 0.85;
+  animation: firm-marker-drop 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards,
+             firm-dot-pulse 1100ms var(--ease-out-quart) infinite;
 }
 :root[data-theme='dark'] .firm-marker--active {
   stroke: var(--warm-paper) !important;
   stroke-opacity: 0.9;
+}
+@keyframes firm-dot-pulse {
+  0%   { fill-opacity: 1; }
+  50%  { fill-opacity: 0.72; }
+  100% { fill-opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .firm-marker--hover,
+  .firm-marker--active {
+    animation: none;
+  }
 }
 .firm-marker--dim {
   cursor: default;
