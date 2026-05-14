@@ -151,6 +151,13 @@ export function App() {
     setMapTarget({ kind: 'world', key: nextKey() });
   }, [profile]);
 
+  // Captured geolocation for unsigned visitors. Also feeds the ambient
+  // "you are here" beacon set below — firms within ~30 km of this point
+  // get a soft pulse so the user can see their local market at a glance.
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(
+    null
+  );
+
   // On first load (no profile yet), zoom out to full world and centre on the
   // user's current geolocation if the browser allows it.
   useEffect(() => {
@@ -158,6 +165,7 @@ export function App() {
     if (!('geolocation' in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setMapTarget({
           kind: 'world-at',
           lat: pos.coords.latitude,
@@ -296,6 +304,40 @@ export function App() {
     }
     return set;
   }, [profile]);
+
+  /**
+   * Firms in the user's home city — used to drive the ambient beacon on the
+   * map. Signed-in users: match on profile.city (string). Unsigned users
+   * with geolocation: anything within ~30 km of their coords (degree box,
+   * good enough — we're picking visual emphasis, not running a search).
+   */
+  const homeFirmIds = useMemo<ReadonlySet<string>>(() => {
+    if (profile?.city) {
+      const target = profile.city.toLowerCase();
+      const set = new Set<string>();
+      for (const f of FIRMS) {
+        if (f.city.toLowerCase() === target) set.add(f.id);
+      }
+      return set;
+    }
+    if (userLoc) {
+      const { lat, lng } = userLoc;
+      // ~30 km box. 1° lat ≈ 111 km; longitude shrinks with cos(lat). We use
+      // a generous degree window rather than haversine because the data
+      // resolution is city-level anyway.
+      const dLat = 0.27; // ~30 km north/south
+      const cosLat = Math.cos((lat * Math.PI) / 180) || 1;
+      const dLng = 0.27 / Math.max(0.1, cosLat); // east/west scaled by lat
+      const set = new Set<string>();
+      for (const f of FIRMS) {
+        if (Math.abs(f.lat - lat) > dLat) continue;
+        if (Math.abs(f.lng - lng) > dLng) continue;
+        set.add(f.id);
+      }
+      return set;
+    }
+    return new Set<string>();
+  }, [profile?.city, userLoc]);
 
   /** Firms whose city contains ≥2 firms — used to decide whether to zoom past country. */
   const clusteredFirmIds = useMemo(() => {
@@ -555,6 +597,7 @@ export function App() {
             focusedCountryCode={regionAlpha2}
             matchingCountryIds={matchingCountryIds}
             matchingFirmIds={matchingFirmIds}
+            homeFirmIds={homeFirmIds}
             hasProfile={!!profile}
             target={mapTarget}
             hoveredFirmId={hoveredFirmId}

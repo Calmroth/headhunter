@@ -94,6 +94,8 @@ type Props = {
   focusedCountryCode: string | null; // alpha-2
   matchingCountryIds?: Set<string>; // alpha-2
   matchingFirmIds?: ReadonlySet<string>;
+  /** Firms in the user's home city. Get an ambient beacon to mark "you are here". */
+  homeFirmIds?: ReadonlySet<string>;
   hasProfile?: boolean;
   target: MapTarget | null;
   hoveredFirmId: string | null;
@@ -121,6 +123,7 @@ export function MapView({
   focusedCountryCode,
   matchingCountryIds,
   matchingFirmIds,
+  homeFirmIds,
   hasProfile,
   target,
   hoveredFirmId,
@@ -340,6 +343,7 @@ export function MapView({
           roleCounts={roleCounts}
           jobsByFirm={jobsByFirm}
           matchingFirmIds={matchingFirmIds}
+          homeFirmIds={homeFirmIds}
           hasProfile={hasProfile}
         />
 
@@ -367,6 +371,7 @@ function FirmMarkersLayer({
   roleCounts,
   jobsByFirm,
   matchingFirmIds,
+  homeFirmIds,
   hasProfile,
 }: {
   firms: Firm[];
@@ -377,6 +382,7 @@ function FirmMarkersLayer({
   roleCounts: Map<string, number>;
   jobsByFirm: Map<string, Array<{ id: string; title: string; discipline: string; seniority: string }>>;
   matchingFirmIds?: ReadonlySet<string>;
+  homeFirmIds?: ReadonlySet<string>;
   hasProfile?: boolean;
 }) {
   const map = useMap();
@@ -407,27 +413,33 @@ function FirmMarkersLayer({
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [focusedFirmId]);
 
-  // Beacon ring on the focused firm dot — slow, looping pulse that radiates
-  // outward from the marker so the active selection reads at a glance. Tears
-  // down and re-attaches on focus / zoom changes (Leaflet remounts CircleMarker
-  // SVG paths across some zoom transitions). Same retry cadence as the popup
-  // opener for cluster-firms that only mount once the zoom reaches CITY_ZOOM.
+  // Compute baseRadius the same way the render loop does — keeps the beacon
+  // sized to the actual dot regardless of role-count variance.
+  const beaconRadiusFor = (firmId: string): number => {
+    const count = roleCounts.get(firmId) ?? 0;
+    const isMatch = !!hasProfile && !!matchingFirmIds?.has(firmId);
+    return isMatch
+      ? Math.max(6, Math.min(12, 5 + count))
+      : Math.max(5, Math.min(10, 4 + count));
+  };
+
+  // Primary beacon on the focused firm dot — bright double-ringed pulse plus
+  // a subtle radius breathe on the dot itself. Tears down and re-attaches on
+  // focus / zoom changes (Leaflet remounts CircleMarker SVG paths across some
+  // zoom transitions). Same retry cadence as the popup opener for cluster-
+  // firms that only mount once the zoom reaches CITY_ZOOM.
   useEffect(() => {
     if (!focusedFirmId) return;
     const firm = FIRMS_BY_ID[focusedFirmId];
     if (!firm) return;
-    const count = roleCounts.get(focusedFirmId) ?? 0;
-    const isMatch = !!hasProfile && !!matchingFirmIds?.has(focusedFirmId);
-    const baseRadius = isMatch
-      ? Math.max(6, Math.min(12, 5 + count))
-      : Math.max(5, Math.min(10, 4 + count));
+    const baseRadius = beaconRadiusFor(focusedFirmId);
 
     let stop: (() => void) | null = null;
     const tryStart = () => {
       const m = markerRefs.current[focusedFirmId];
       const path = (m as unknown as { _path?: SVGPathElement } | null)?._path;
       if (m && path) {
-        stop = startBeacon(m, baseRadius);
+        stop = startBeacon(m, baseRadius, 'primary');
         return true;
       }
       return false;
@@ -446,7 +458,45 @@ function FirmMarkersLayer({
       timers.forEach((t) => window.clearTimeout(t));
       stop?.();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedFirmId, zoom, roleCounts, matchingFirmIds, hasProfile]);
+
+  // Ambient beacon on every home-city firm dot — quiet single-ring pulse that
+  // marks "you are here" on the map without competing with the primary beacon.
+  // Skips the currently-focused firm (its primary beacon supersedes) and
+  // re-mounts on zoom so it tracks cluster expansion / collapse.
+  useEffect(() => {
+    if (!homeFirmIds || homeFirmIds.size === 0) return;
+    const stops: Array<() => void> = [];
+    const timers: number[] = [];
+
+    const attach = (id: string) => {
+      const m = markerRefs.current[id];
+      const path = (m as unknown as { _path?: SVGPathElement } | null)?._path;
+      if (m && path) {
+        const stop = startBeacon(m, beaconRadiusFor(id), 'ambient');
+        stops.push(stop);
+        return true;
+      }
+      return false;
+    };
+
+    for (const id of homeFirmIds) {
+      if (id === focusedFirmId) continue;
+      if (attach(id)) continue;
+      // Retry for not-yet-mounted (cluster-zoom) markers.
+      for (const d of [120, 320, 620, 980, 1300]) {
+        const t = window.setTimeout(() => attach(id), d);
+        timers.push(t);
+      }
+    }
+
+    return () => {
+      for (const t of timers) window.clearTimeout(t);
+      for (const fn of stops) fn();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homeFirmIds, focusedFirmId, zoom, roleCounts, matchingFirmIds, hasProfile]);
 
   const showClusters = zoom < CITY_ZOOM;
 

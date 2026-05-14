@@ -92,65 +92,156 @@ export function pulseClick(marker: L.CircleMarker, baseRadius: number) {
   });
 }
 
+type BeaconIntensity = 'primary' | 'ambient';
+
+type BeaconConfig = {
+  /** Initial stroke opacity for each ring. */
+  startOpacity: number;
+  /** Outer extent expressed as a multiple of baseRadius. */
+  scale: number;
+  /** Duration of one full pulse cycle (ms). */
+  duration: number;
+  /** Stroke width of each ring in SVG user units. */
+  strokeWidth: number;
+  /** Number of overlapping rings. Each is phased by duration / count. */
+  rings: number;
+};
+
+const BEACON_CONFIG: Record<BeaconIntensity, BeaconConfig> = {
+  // Primary: the "this is the selected firm" emphasis. Wide, bright, double-
+  // ringed so there's always a ring expanding while another is fading — the
+  // dot looks like it's actively transmitting.
+  primary: {
+    startOpacity: 0.85,
+    scale: 4.2,
+    duration: 1200,
+    strokeWidth: 2,
+    rings: 2,
+  },
+  // Ambient: the "you are here" cue on home-city dots. Single ring, quieter
+  // opacity, slower cadence so a screenful of them doesn't feel busy.
+  ambient: {
+    startOpacity: 0.35,
+    scale: 2.8,
+    duration: 2200,
+    strokeWidth: 1.25,
+    rings: 1,
+  },
+};
+
 /**
- * Persistent beacon ring on a focused CircleMarker. A soft, slowly-pulsing
- * circle that radiates outward from the dot, fades, and repeats — the visual
- * cue that "this is the selected firm" without occluding the dot itself.
+ * Persistent beacon on a CircleMarker. A pulsing ring (or two overlapping
+ * rings) that radiates outward from the dot, fades, and repeats. Used to
+ * advertise the focused firm ("primary" intensity) and to mark home-city
+ * firms ("ambient").
  *
- * Returns a `stop()` function that cancels the loop and removes the ring.
- * Caller is responsible for invoking `stop()` when the active firm changes
- * or the marker unmounts.
+ * Returns a `stop()` function that cancels the loop and removes the rings.
+ * Caller is responsible for invoking it when the marker's state changes
+ * (focus moves, firm leaves home-city set, marker unmounts).
  *
- * No-op (and returns a noop stop) when prefers-reduced-motion is set.
+ * No-op (returns a noop stop) when prefers-reduced-motion is set.
  */
 export function startBeacon(
   marker: L.CircleMarker,
-  baseRadius: number
+  baseRadius: number,
+  intensity: BeaconIntensity = 'primary'
 ): () => void {
   if (prefersReduce()) return () => {};
 
   const path = (marker as CircleMarkerWithPath)._path;
   if (!path?.parentNode) return () => {};
 
+  const cfg = BEACON_CONFIG[intensity];
   const stroke = path.getAttribute('stroke') ?? '#b8482e';
   const bbox = path.getBBox();
   const cx = bbox.x + bbox.width / 2;
   const cy = bbox.y + bbox.height / 2;
 
-  const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  ring.setAttribute('cx', String(cx));
-  ring.setAttribute('cy', String(cy));
-  ring.setAttribute('r', String(baseRadius));
-  ring.setAttribute('fill', 'none');
-  ring.setAttribute('stroke', stroke);
-  ring.setAttribute('stroke-width', '1.25');
-  ring.setAttribute('pointer-events', 'none');
-  ring.setAttribute('stroke-opacity', '0.55');
-  ring.classList.add('firm-beacon-ring');
-  path.parentNode.appendChild(ring);
+  const cleanups: Array<() => void> = [];
+  const ringElements: SVGCircleElement[] = [];
 
-  const state = { r: baseRadius, op: 0.55 };
-  const animation = animate(state, {
-    r: baseRadius * 3.4,
-    op: 0,
-    duration: 1500,
-    ease: 'outQuart',
-    loop: true,
-    onUpdate: () => {
-      ring.setAttribute('r', String(state.r));
-      ring.setAttribute('stroke-opacity', String(state.op));
-    },
-  });
+  for (let i = 0; i < cfg.rings; i++) {
+    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ring.setAttribute('cx', String(cx));
+    ring.setAttribute('cy', String(cy));
+    ring.setAttribute('r', String(baseRadius));
+    ring.setAttribute('fill', 'none');
+    ring.setAttribute('stroke', stroke);
+    ring.setAttribute('stroke-width', String(cfg.strokeWidth));
+    ring.setAttribute('pointer-events', 'none');
+    ring.setAttribute('stroke-opacity', '0');
+    ring.classList.add('firm-beacon-ring', `firm-beacon-ring--${intensity}`);
+    path.parentNode.appendChild(ring);
+    ringElements.push(ring);
+
+    const state = { r: baseRadius, op: cfg.startOpacity };
+    const startRing = () => {
+      const animation = animate(state, {
+        r: baseRadius * cfg.scale,
+        op: 0,
+        duration: cfg.duration,
+        ease: 'outQuart',
+        loop: true,
+        onUpdate: () => {
+          ring.setAttribute('r', String(state.r));
+          ring.setAttribute('stroke-opacity', String(state.op));
+        },
+      });
+      cleanups.push(() => {
+        try {
+          (animation as unknown as { pause?: () => void }).pause?.();
+        } catch {
+          /* no-op */
+        }
+      });
+    };
+
+    if (i === 0) {
+      startRing();
+    } else {
+      // Phase-offset subsequent rings so the pulses interleave instead of
+      // stacking on top of each other.
+      const delay = (cfg.duration / cfg.rings) * i;
+      const timer = window.setTimeout(startRing, delay);
+      cleanups.push(() => window.clearTimeout(timer));
+    }
+  }
+
+  // Primary beacons also breathe the dot itself: ±15% radius oscillation so
+  // the active firm reads even from across the map.
+  if (intensity === 'primary') {
+    const dotState = { r: baseRadius };
+    const dotAnim = animate(dotState, {
+      r: baseRadius * 1.18,
+      duration: cfg.duration / 2,
+      ease: 'inOutSine',
+      loop: true,
+      alternate: true,
+      onUpdate: () => {
+        try {
+          marker.setRadius(dotState.r);
+        } catch {
+          /* marker may have been removed mid-animation */
+        }
+      },
+    });
+    cleanups.push(() => {
+      try {
+        (dotAnim as unknown as { pause?: () => void }).pause?.();
+      } catch {
+        /* no-op */
+      }
+      try {
+        marker.setRadius(baseRadius);
+      } catch {
+        /* marker gone */
+      }
+    });
+  }
 
   return () => {
-    // anime v4: `pause()` halts the loop, `revert()` restores initial values.
-    // We just want it stopped and the DOM cleaned up.
-    try {
-      (animation as unknown as { pause?: () => void }).pause?.();
-    } catch {
-      /* no-op */
-    }
-    ring.remove();
+    for (const fn of cleanups) fn();
+    for (const ring of ringElements) ring.remove();
   };
 }
 
