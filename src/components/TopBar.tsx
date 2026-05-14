@@ -12,12 +12,13 @@ type Props = {
 };
 
 const LIKE_KEY = 'hh.liked';
-// Donate destinations. Replace these with your real numbers / URLs:
-//   - SWISH_NUMBER: the recipient's Swish phone number (Swedish format).
-//   - CARD_URL: a hosted card-checkout URL (PayPal NCP, Stripe Payment Link,
-//     Buy Me a Coffee, Ko-fi, etc.). PayPal's NCP page handles both signed-in
-//     PayPal flow and unauthenticated card-only flow on the same surface.
+// Donate destinations:
+//   - SWISH_NUMBER: Swedish-format phone number, copy-to-clipboard flow.
+//   - PAYPAL_URL: paypal.me link (signed-in PayPal-account flow).
+//   - CARD_URL: PayPal NCP checkout — handles unauthenticated card payment
+//     on a single hosted page.
 const SWISH_NUMBER = '+46 70 569 54 96';
+const PAYPAL_URL = 'https://paypal.me/christianalmroth';
 const CARD_URL = 'https://www.paypal.com/ncp/payment/KSQ33L2AGZHNS';
 
 function readLiked(): boolean {
@@ -237,6 +238,21 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
                   </span>
                 </span>
               </button>
+
+              <a
+                className="donate-option"
+                href={PAYPAL_URL}
+                target="_blank"
+                rel="noreferrer noopener"
+                role="menuitem"
+                onClick={() => setDonateOpen(false)}
+              >
+                <span className="donate-option-mark mono">Pp</span>
+                <span className="donate-option-body">
+                  <span className="donate-option-name serif">PayPal</span>
+                  <span className="donate-option-meta mono">paypal.me/christianalmroth</span>
+                </span>
+              </a>
 
               <a
                 className="donate-option"
