@@ -48,9 +48,12 @@
 }
 
 @media (max-width: 900px) {
+  /* Give the map a clear majority of the first screen — it IS the product
+     (PRODUCT.md design principle #1). 60vh leaves room for the sticky
+     topbar above and a hint of the jobs rail peeking below. */
   .center-stage {
-    min-height: 50vh;
-    height: 50vh;
+    min-height: 60vh;
+    height: 60vh;
   }
 }
 

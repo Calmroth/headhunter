@@ -167,7 +167,12 @@
   border: 1px solid var(--hairline);
   font-family: var(--font-body);
   font-size: 0.75rem;
-  padding: 0.35rem 0.625rem;
+  /* Touch target: 40px+ tall via padding so chips are tappable on phone.
+     Slim on desktop where mouse precision is fine. */
+  padding: 0.5rem 0.75rem;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
   border-radius: 999px;
   cursor: pointer;
   /* Match the rest of the project's motion vocabulary: subtle lift on

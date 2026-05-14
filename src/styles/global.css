@@ -206,17 +206,45 @@ a {
   }
   .stage {
     grid-template-columns: 1fr;
+    /* Reorder on phone: map first (the product), then jobs (the action),
+       then firms (supporting list). PRODUCT.md design principle #1:
+       "The map is the page." Three explicit rows so we can pin grid-row
+       on each child below. */
     grid-template-rows: auto auto auto;
   }
-  .stage > .firms,
-  .stage > .center-stage,
+  .stage > .center-stage {
+    grid-row: 1;
+    grid-column: 1;
+    max-height: none;
+  }
   .stage > .jobs {
-    grid-row: auto;
+    grid-row: 2;
     grid-column: 1;
     max-height: none;
   }
   .stage > .firms {
-    max-height: 18rem;
+    grid-row: 3;
+    grid-column: 1;
+    max-height: 20rem;
+    border-top: 1px solid var(--hairline);
+  }
+  /* Sticky topbar keeps brand + share + account reachable as the user
+     scrolls down into the rails. The rest of the app sits below it via the
+     existing z-index. */
+  .app > .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+  /* Connectors are SVG curves drawn between the firm rail (left) and the
+     job rail (right). Stacked layout makes them irrelevant — disable. */
+  .connectors {
+    display: none;
+  }
+  /* Honor iOS home-indicator safe area so the footer doesn't sit beneath
+     the gesture bar. */
+  .app-footer {
+    padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
   }
 }
 

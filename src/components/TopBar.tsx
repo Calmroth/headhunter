@@ -144,7 +144,7 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
       <div className="topbar-share" role="group" aria-label="Share & support">
         <button
           type="button"
-          className={`topbar-share-button ${liked ? 'is-liked' : ''}`}
+          className={`topbar-share-button is-like-button ${liked ? 'is-liked' : ''}`}
           onClick={toggleLike}
           aria-pressed={liked}
           aria-label={liked ? 'Unlike Headhunter' : 'Like Headhunter'}
@@ -172,7 +172,7 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
         </button>
 
         <a
-          className="topbar-share-button"
+          className="topbar-share-button is-email-button"
           href={mailHref}
           aria-label="Share via email"
           title="Email"

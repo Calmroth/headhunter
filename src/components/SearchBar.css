@@ -107,11 +107,11 @@
 }
 
 @media (max-width: 900px) {
+  /* Keep the search bar overlaid on the map at the bottom — it's the same
+     spatial relationship as desktop, just narrower. Loses the "search
+     floating below a map" identity if dropped to a static block. */
   .search {
-    position: static;
-    transform: none;
-    margin: 1rem var(--gutter);
-    width: auto;
-    max-width: none;
+    bottom: 1rem;
+    width: calc(100% - 2 * var(--gutter));
   }
 }
