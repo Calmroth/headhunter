@@ -89,6 +89,11 @@ export type MapTarget =
       firmId: string;
       /** When true, zoom past country level to kommun so clustered dots separate. */
       isCluster?: boolean;
+      /** Container-pixel position where the firm dot should land after the
+       *  fly. When set, the camera is offset so the dot stays under the
+       *  click point instead of recentering to the viewport middle —
+       *  cursor effectively "follows" the clicked dot. */
+      anchorPoint?: { x: number; y: number };
       key: number;
     }
   /** Soft pan to a firm's coords without changing zoom. Used for rail-hover
@@ -106,7 +111,10 @@ type Props = {
   target: MapTarget | null;
   hoveredFirmId: string | null;
   onFirmHover: (id: string | null) => void;
-  onFirmClick: (id: string) => void;
+  /** When the click originates from a map dot, the second arg carries the
+   *  click's container-pixel position so the camera can anchor to it. Rail-
+   *  driven invocations omit it and the camera centers normally. */
+  onFirmClick: (id: string, anchorPoint?: { x: number; y: number }) => void;
   /** Fired when the user clicks a city cluster on the map. Drives the
    *  rails' city-level filter so both columns show only that city. */
   onCityClick?: (city: string, countryCode: string) => void;
@@ -389,7 +397,7 @@ function FirmMarkersLayer({
   firms: Firm[];
   focusedFirmId: string | null;
   hoveredFirmId: string | null;
-  onFirmClick: (id: string) => void;
+  onFirmClick: (id: string, anchorPoint?: { x: number; y: number }) => void;
   onFirmHover: (id: string | null) => void;
   onCityClick?: (city: string, countryCode: string) => void;
   roleCounts: Map<string, number>;
@@ -783,7 +791,12 @@ function FirmMarkersLayer({
               click: (e) => {
                 const marker = e.target as L.CircleMarker;
                 pulseClick(marker, baseRadius);
-                onFirmClick(f.id);
+                // Capture the click position in container pixels so App can
+                // anchor the post-click pan to it — the dot ends up where
+                // the cursor is, not at viewport center.
+                const ev = e as L.LeafletMouseEvent;
+                const cp = ev.containerPoint;
+                onFirmClick(f.id, cp ? { x: cp.x, y: cp.y } : undefined);
               },
               mouseover: (e) => {
                 // Map dot hover is purely local — pulse + (optional) popup
@@ -987,6 +1000,30 @@ function FlyToTarget({ target }: { target: MapTarget | null }) {
     const isCluster = target.kind === 'firm' && !!target.isCluster;
     const desiredZoom = isCluster ? CITY_ZOOM : COUNTRY_ZOOM;
     const targetZoom = Math.max(current, desiredZoom);
+
+    // Anchor-aware path: when the click came from a map dot, offset the
+    // post-fly center so the dot's container-pixel position stays where the
+    // cursor clicked it. Skipped when the dot was already at the click point
+    // *and* the zoom isn't changing — no-op pan would still visually shift
+    // because Leaflet would recenter without the anchor math.
+    const anchor = target.kind === 'firm' ? target.anchorPoint : undefined;
+    if (anchor) {
+      const size = map.getSize();
+      const firmPx = map.project([target.lat, target.lng], targetZoom);
+      const offsetCenterPx = firmPx
+        .subtract(L.point(anchor.x, anchor.y))
+        .add(L.point(size.x / 2, size.y / 2));
+      const newCenter = map.unproject(offsetCenterPx, targetZoom);
+      if (reduced) {
+        map.setView(newCenter, targetZoom, { animate: false });
+      } else if (current === targetZoom) {
+        map.panTo(newCenter, { duration: 0.7, easeLinearity: 0.25 });
+      } else {
+        map.flyTo(newCenter, targetZoom, { duration: 1.1, easeLinearity: 0.1 });
+      }
+      return;
+    }
+
     if (reduced) {
       map.setView([target.lat, target.lng], targetZoom, { animate: false });
     } else if (current === targetZoom) {

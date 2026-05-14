@@ -538,8 +538,14 @@ export function App() {
 
   /** Firm click — pans to firm AND narrows both rails to the firm's city.
    *  Stays at country zoom unless the firm is part of a same-city cluster,
-   *  in which case we zoom in to kommun so the stacked dots separate visually. */
-  const handleSelectFirm = (id: string | null) => {
+   *  in which case we zoom in to kommun so the stacked dots separate visually.
+   *  When the click came from a map dot, anchorPoint carries the click's
+   *  container-pixel position; FlyToTarget uses it to offset the camera so
+   *  the dot lands under the cursor instead of recentering the viewport. */
+  const handleSelectFirm = (
+    id: string | null,
+    anchorPoint?: { x: number; y: number }
+  ) => {
     setFocusedFirmId(id);
     if (!id) {
       // Deselecting a firm also clears the city focus, so the rails return
@@ -556,6 +562,7 @@ export function App() {
       lng: firm.lng,
       firmId: id,
       isCluster: clusteredFirmIds.has(id),
+      anchorPoint,
       key: nextKey(),
     });
   };
