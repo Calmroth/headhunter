@@ -107,6 +107,9 @@ type Props = {
   hoveredFirmId: string | null;
   onFirmHover: (id: string | null) => void;
   onFirmClick: (id: string) => void;
+  /** Fired when the user clicks a city cluster on the map. Drives the
+   *  rails' city-level filter so both columns show only that city. */
+  onCityClick?: (city: string, countryCode: string) => void;
   onCountryClick: (
     alpha2: string,
     name: string,
@@ -135,6 +138,7 @@ export function MapView({
   hoveredFirmId,
   onFirmHover,
   onFirmClick,
+  onCityClick,
   onCountryClick,
   onReturnToGlobe,
 }: Props) {
@@ -346,6 +350,7 @@ export function MapView({
           hoveredFirmId={hoveredFirmId}
           onFirmClick={onFirmClick}
           onFirmHover={onFirmHover}
+          onCityClick={onCityClick}
           roleCounts={roleCounts}
           jobsByFirm={jobsByFirm}
           matchingFirmIds={matchingFirmIds}
@@ -374,6 +379,7 @@ function FirmMarkersLayer({
   hoveredFirmId,
   onFirmClick,
   onFirmHover,
+  onCityClick,
   roleCounts,
   jobsByFirm,
   matchingFirmIds,
@@ -385,6 +391,7 @@ function FirmMarkersLayer({
   hoveredFirmId: string | null;
   onFirmClick: (id: string) => void;
   onFirmHover: (id: string | null) => void;
+  onCityClick?: (city: string, countryCode: string) => void;
   roleCounts: Map<string, number>;
   jobsByFirm: Map<string, Array<{ id: string; title: string; discipline: string; seniority: string }>>;
   matchingFirmIds?: ReadonlySet<string>;
@@ -654,6 +661,11 @@ function FirmMarkersLayer({
             const onAreaClick = () => {
               if (!c.bounds) return;
               onFirmHover(null);
+              // Narrow both rails to this city before flying. Clicking a
+              // cluster IS the request to focus the city.
+              if (onCityClick && c.firms[0]) {
+                onCityClick(c.firms[0].city, c.firms[0].countryCode);
+              }
               // Never zoom OUT on a single click. flyToBounds picks the
               // optimal fit zoom which can be shallower than current view —
               // if so, pan-only at current zoom. Otherwise zoom in to the

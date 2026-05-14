@@ -7,6 +7,9 @@ import './FirmsList.css';
 
 type Props = {
   focusedCountryCode: string | null; // alpha-2
+  /** When set, narrows the list to firms in this exact city. Overrides
+   *  focusedCountryCode for scope (city is narrower than country). */
+  focusedCity?: { city: string; countryCode: string } | null;
   /** ISO alpha-2 of the user's home country, used to float home firms to the top. */
   homeCountryCode?: string | null;
   residentCity?: string;
@@ -23,6 +26,7 @@ type Props = {
 
 export function FirmsList({
   focusedCountryCode,
+  focusedCity,
   homeCountryCode,
   residentCity,
   focusedFirmId,
@@ -36,9 +40,16 @@ export function FirmsList({
   onSelectFirm,
 }: Props) {
   const firms = useMemo(() => {
-    const list = (focusedCountryCode
-      ? FIRMS.filter((f) => f.countryCode === focusedCountryCode)
-      : [...FIRMS]
+    // focusedCity is the narrowest scope. Falls through to country, then all.
+    const list = (focusedCity
+      ? FIRMS.filter(
+          (f) =>
+            f.countryCode === focusedCity.countryCode &&
+            f.city === focusedCity.city
+        )
+      : focusedCountryCode
+        ? FIRMS.filter((f) => f.countryCode === focusedCountryCode)
+        : [...FIRMS]
     ).filter((f) => filteredFirmIds.has(f.id));
 
     const counts = new Map<string, number>();
@@ -76,9 +87,13 @@ export function FirmsList({
     });
 
     return list.map((f) => ({ firm: f, roleCount: counts.get(f.id) ?? 0 }));
-  }, [focusedCountryCode, homeCountryCode, residentCity, filteredFirmIds]);
+  }, [focusedCountryCode, focusedCity, homeCountryCode, residentCity, filteredFirmIds]);
 
-  const heading = focusedCountryCode ? 'Consultancies in region' : 'Featured consultancies';
+  const heading = focusedCity
+    ? `Consultancies in ${focusedCity.city}`
+    : focusedCountryCode
+      ? 'Consultancies in region'
+      : 'Featured consultancies';
 
   // Scroll the hovered row into view when the hover came from the map.
   const scrollRef = useRef<HTMLDivElement | null>(null);

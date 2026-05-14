@@ -50,6 +50,14 @@ export function App() {
     label: string;
   } | null>(null);
   const [focusedFirmId, setFocusedFirmId] = useState<string | null>(null);
+  // Narrows both rails to a single city. Set by clicking a city cluster on
+  // the map or by clicking any firm dot (so the rails surface only that
+  // city's firms / roles). Cleared by clearRegion, country clicks, country
+  // filter changes, and ESC.
+  const [focusedCity, setFocusedCity] = useState<{
+    city: string;
+    countryCode: string;
+  } | null>(null);
   const [hoveredFirmId, setHoveredFirmId] = useState<string | null>(null);
   // Tracks which surface produced the current hover. Only firm-rail hovers
   // (and the focused/clicked firm) drive the Connectors overlay — job-row
@@ -247,10 +255,11 @@ export function App() {
       } else if (e.key === 'Escape') {
         // ESC clears the focused region (in addition to whatever the focused
         // element already handles via its own listener).
-        if (focusedCountry || focusedFirmId) {
+        if (focusedCountry || focusedFirmId || focusedCity) {
           if (isTyping()) return;
           setFocusedCountry(null);
           setFocusedFirmId(null);
+          setFocusedCity(null);
           if (profile) {
             setMapTarget({
               kind: 'region',
@@ -472,6 +481,7 @@ export function App() {
   ) => {
     setFocusedCountry({ alpha2, label: name });
     setFocusedFirmId(null);
+    setFocusedCity(null);
     // Frame to where the firms ACTUALLY sit, not the country's geographic
     // bbox. Russia → Moscow; Sweden → Stockholm + Gothenburg corridor; etc.
     // Falls back to the polygon bbox when the country has no firms (the
@@ -518,6 +528,7 @@ export function App() {
   const clearRegion = () => {
     setFocusedCountry(null);
     setFocusedFirmId(null);
+    setFocusedCity(null);
     if (profile) {
       setMapTarget({ kind: 'region', lat: profile.lat, lng: profile.lng, key: nextKey() });
     } else {
@@ -525,14 +536,20 @@ export function App() {
     }
   };
 
-  /** Firm click — pans to firm. Stays at country zoom unless the firm is part
-   *  of a same-city cluster, in which case we zoom in to kommun so the stacked
-   *  dots separate visually. */
+  /** Firm click — pans to firm AND narrows both rails to the firm's city.
+   *  Stays at country zoom unless the firm is part of a same-city cluster,
+   *  in which case we zoom in to kommun so the stacked dots separate visually. */
   const handleSelectFirm = (id: string | null) => {
     setFocusedFirmId(id);
-    if (!id) return;
+    if (!id) {
+      // Deselecting a firm also clears the city focus, so the rails return
+      // to country-or-wider scope without an orphaned city filter.
+      setFocusedCity(null);
+      return;
+    }
     const firm = FIRMS_BY_ID[id];
     if (!firm) return;
+    setFocusedCity({ city: firm.city, countryCode: firm.countryCode });
     setMapTarget({
       kind: 'firm',
       lat: firm.lat,
@@ -541,6 +558,13 @@ export function App() {
       isCluster: clusteredFirmIds.has(id),
       key: nextKey(),
     });
+  };
+
+  /** Cluster click — narrows both rails to that city without focusing a
+   *  specific firm. The MapView's onAreaClick still handles the camera move. */
+  const handleSelectCity = (city: string, countryCode: string) => {
+    setFocusedFirmId(null);
+    setFocusedCity({ city, countryCode });
   };
 
   const handleOpenJob = (jobId: string) => {
@@ -573,6 +597,7 @@ export function App() {
       <div className="stage">
         <FirmsList
           focusedCountryCode={regionAlpha2 ?? profile?.countryCode ?? null}
+          focusedCity={focusedCity}
           homeCountryCode={homeContext.countryCode}
           residentCity={homeContext.city ?? undefined}
           focusedFirmId={focusedFirmId}
@@ -598,11 +623,13 @@ export function App() {
             hoveredFirmId={hoveredFirmId}
             onFirmHover={setHoveredFirmId}
             onFirmClick={handleSelectFirm}
+            onCityClick={handleSelectCity}
             onCountryClick={handleCountryClick}
             onReturnToGlobe={() => {
               // No globe anymore — third dblclick out just resets to world view.
               setFocusedCountry(null);
               setFocusedFirmId(null);
+              setFocusedCity(null);
               setMapTarget({ kind: 'world', key: nextKey() });
             }}
           />
@@ -621,6 +648,7 @@ export function App() {
           query={query}
           focusedCountryCode={regionAlpha2}
           focusedFirmId={focusedFirmId}
+          focusedCity={focusedCity}
           hoveredFirmId={hoveredFirmId}
           focusedRegionLabel={regionLabel}
           profileDisciplines={profile?.disciplines}

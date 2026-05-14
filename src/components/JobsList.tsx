@@ -7,6 +7,8 @@ import './JobsList.css';
 type Props = {
   query: string;
   focusedCountryCode: string | null; // alpha-2
+  /** When set, narrows the list to jobs at firms in this exact city. */
+  focusedCity?: { city: string; countryCode: string } | null;
   focusedFirmId?: string | null;
   /** Rail-hover preview — also narrows the jobs list while a row is hovered. */
   hoveredFirmId?: string | null;
@@ -32,6 +34,7 @@ const TOTAL_JOBS = JOBS.length;
 export function JobsList({
   query,
   focusedCountryCode,
+  focusedCity,
   focusedFirmId,
   hoveredFirmId,
   focusedRegionLabel,
@@ -61,7 +64,17 @@ export function JobsList({
       if (!firm) return false;
       if (filteredJobIds && !filteredJobIds.has(j.id)) return false;
       if (effectiveFirmId && j.firmId !== effectiveFirmId) return false;
-      if (focusedCountryCode && firm.countryCode !== focusedCountryCode) return false;
+      // City focus is narrower than country. When set, both must match.
+      if (focusedCity) {
+        if (
+          firm.countryCode !== focusedCity.countryCode ||
+          firm.city !== focusedCity.city
+        ) {
+          return false;
+        }
+      } else if (focusedCountryCode && firm.countryCode !== focusedCountryCode) {
+        return false;
+      }
       if (!q) return true;
       return (
         j.title.toLowerCase().includes(q) ||
@@ -86,7 +99,7 @@ export function JobsList({
 
       return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
     });
-  }, [query, focusedCountryCode, effectiveFirmId, profileDisciplines, filteredJobIds, isSeen]);
+  }, [query, focusedCountryCode, focusedCity, effectiveFirmId, profileDisciplines, filteredJobIds, isSeen]);
 
   // Firm focus takes precedence over country focus in the header so the user
   // sees exactly which set is being filtered. Falls back to region or worldwide.
