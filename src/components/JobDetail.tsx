@@ -1,5 +1,6 @@
 import type { Job } from '../data/jobs';
 import { FIRMS_BY_ID } from '../data/firms';
+import { WEBSITES } from '../data/websites';
 import { DISCIPLINE_SHORT } from '../data/taxonomy';
 import { ParticleField } from './ParticleField';
 import { FirmEmblem3D } from './FirmEmblem3D';
@@ -9,11 +10,25 @@ import './JobDetail.css';
 type Props = {
   job: Job;
   onBack: () => void;
-  onApply: () => void;
+  /** Retained for callers, no longer used — Apply now opens the firm's
+   *  external site in a new tab so applicants land on the real listing. */
+  onApply?: () => void;
 };
 
-export function JobDetail({ job, onBack, onApply }: Props) {
+export function JobDetail({ job, onBack }: Props) {
   const firm = FIRMS_BY_ID[job.firmId];
+  // The "real application site" we can point at without per-job URLs is the
+  // firm's own site. Most firms park hiring under /careers; we try that and
+  // let the browser surface a 404 if the firm doesn't follow the convention
+  // (rather than 404 the user ourselves by guessing a path that doesn't
+  // exist). When we have no website on file, fall back to a Google search
+  // scoped to the role title + firm name.
+  const firmSite = WEBSITES[job.firmId];
+  const applyUrl = firmSite
+    ? `${firmSite.replace(/\/+$/, '')}/careers`
+    : `https://www.google.com/search?q=${encodeURIComponent(
+        `${firm?.name ?? job.firmId} ${job.title} apply`
+      )}`;
 
   return (
     <main className="job-detail">
@@ -70,11 +85,17 @@ export function JobDetail({ job, onBack, onApply }: Props) {
         </section>
 
         <footer className="job-detail-footer">
-          <button type="button" className="job-detail-apply" onClick={onApply}>
+          <a
+            className="job-detail-apply"
+            href={applyUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+          >
             Apply for this role
-          </button>
+          </a>
           <p className="mono job-detail-hint">
-            Opens the application form for {firm?.name ?? 'this studio'}.
+            Opens {firm?.name ?? 'this studio'}
+            {firmSite ? "'s careers page" : ' on Google'} in a new tab.
           </p>
         </footer>
       </div>
