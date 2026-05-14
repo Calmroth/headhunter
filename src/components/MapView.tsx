@@ -669,19 +669,12 @@ function FirmMarkersLayer({
             const onAreaClick = () => {
               if (!c.bounds) return;
               onFirmHover(null);
-              // Narrow both rails to this city before flying. Clicking a
-              // cluster IS the request to focus the city.
+              // Narrow both rails to this city. Per the map-focus rule, no
+              // fly / zoom — the map stays where the user put it. To explore
+              // the city's dots, the user can wheel-zoom or dblclick out.
               if (onCityClick && c.firms[0]) {
                 onCityClick(c.firms[0].city, c.firms[0].countryCode);
               }
-              // Never zoom OUT on a single click. flyToBounds picks the
-              // optimal fit zoom which can be shallower than current view —
-              // if so, pan-only at current zoom. Otherwise zoom in to the
-              // city, capped at CITY_ZOOM.
-              const currentZoom = map.getZoom();
-              const fitZoom = map.getBoundsZoom(c.bounds, false, L.point(80, 80));
-              const targetZoom = Math.max(currentZoom, Math.min(fitZoom, CITY_ZOOM));
-              map.flyTo(c.bounds.getCenter(), targetZoom, { duration: 0.9, easeLinearity: 0.1 });
             };
             return (
               <Fragment key={`cluster-${c.key}`}>
@@ -846,9 +839,11 @@ function FirmMarkersLayer({
             <Popup
               className="firm-popup-leaflet"
               closeButton={true}
-              autoPan={true}
-              autoPanPaddingTopLeft={[16, 16]}
-              autoPanPaddingBottomRight={[16, 16]}
+              /* autoPan disabled — opening a popup must not move the map
+                 (consistent with the map-focus rule: hover/click never
+                 pan or zoom). Popups near a viewport edge can be partially
+                 clipped; the user is in control of the view. */
+              autoPan={false}
             >
               <FirmPopup firm={f} roleCount={count} jobs={jobs} />
             </Popup>

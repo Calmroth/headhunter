@@ -196,26 +196,11 @@ export function App() {
   const regionLabel = focusedCountry?.label ?? null;
   const regionAlpha2 = focusedCountry?.alpha2 ?? null;
 
-  // Rail-hover preview: when the user mouses over a firm row or job row,
-  // soft-pan the map to that firm's dot so it's easy to find. Debounced
-  // so casual cursor traversal doesn't drag the map around. Map dot hover
-  // does NOT trigger this — the map handlers no longer call onFirmHover.
-  useEffect(() => {
-    if (!hoveredFirmId) return;
-    if (focusedFirmId === hoveredFirmId) return; // already centered
-    const firm = FIRMS_BY_ID[hoveredFirmId];
-    if (!firm) return;
-    const t = window.setTimeout(() => {
-      setMapTarget({
-        kind: 'preview',
-        lat: firm.lat,
-        lng: firm.lng,
-        key: nextKey(),
-      });
-    }, 220);
-    return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hoveredFirmId, focusedFirmId]);
+  // Map-focus rule (intentional): hovering rail rows and clicking firm dots
+  // do NOT pan / zoom the map. The map is a separate view the user controls
+  // manually (wheel zoom, dblclick out, country click). Rail/dot interactions
+  // only update selection + filtering state. Explicit navigation — clicking
+  // a country polygon or changing the country filter — still flies.
 
   // Keyboard help legend visibility.
   const [helpOpen, setHelpOpen] = useState(false);
@@ -373,21 +358,6 @@ export function App() {
     return new Set<string>();
   }, [profile?.city, userLoc]);
 
-  /** Firms whose city contains ≥2 firms — used to decide whether to zoom past country. */
-  const clusteredFirmIds = useMemo(() => {
-    const cityCount = new Map<string, number>();
-    for (const f of FIRMS) {
-      const key = `${f.countryCode}|${f.city}`;
-      cityCount.set(key, (cityCount.get(key) ?? 0) + 1);
-    }
-    const set = new Set<string>();
-    for (const f of FIRMS) {
-      const key = `${f.countryCode}|${f.city}`;
-      if ((cityCount.get(key) ?? 0) > 1) set.add(f.id);
-    }
-    return set;
-  }, []);
-
   /** Pre-compute per-firm role discipline/seniority/industry sets to drive filters. */
   const firmFacets = useMemo(() => {
     const facets = new Map<
@@ -536,15 +506,15 @@ export function App() {
     }
   };
 
-  /** Firm click — pans to firm AND narrows both rails to the firm's city.
-   *  Stays at country zoom unless the firm is part of a same-city cluster,
-   *  in which case we zoom in to kommun so the stacked dots separate visually.
-   *  When the click came from a map dot, anchorPoint carries the click's
-   *  container-pixel position; FlyToTarget uses it to offset the camera so
-   *  the dot lands under the cursor instead of recentering the viewport. */
+  /** Firm click — focuses the firm and narrows both rails to its city.
+   *  Does NOT pan or zoom the map (intentional, see map-focus rule above).
+   *  The user's current map view stays put; selection state updates
+   *  alongside, and the dot's beacon / popup signals which firm is active.
+   *  `anchorPoint` is accepted for signature stability with the map dot
+   *  click path but is no longer used. */
   const handleSelectFirm = (
     id: string | null,
-    anchorPoint?: { x: number; y: number }
+    _anchorPoint?: { x: number; y: number }
   ) => {
     setFocusedFirmId(id);
     if (!id) {
@@ -556,15 +526,6 @@ export function App() {
     const firm = FIRMS_BY_ID[id];
     if (!firm) return;
     setFocusedCity({ city: firm.city, countryCode: firm.countryCode });
-    setMapTarget({
-      kind: 'firm',
-      lat: firm.lat,
-      lng: firm.lng,
-      firmId: id,
-      isCluster: clusteredFirmIds.has(id),
-      anchorPoint,
-      key: nextKey(),
-    });
   };
 
   /** Cluster click — narrows both rails to that city without focusing a
