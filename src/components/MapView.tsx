@@ -1063,13 +1063,42 @@ function FlyToTarget({ target }: { target: MapTarget | null }) {
  * single firm at street level reaches world view in two dblclicks, never
  * more — first to country (city now reads as a cluster), then to world.
  * At world view, falls through to the optional globe (3D) return handler.
+ *
+ * Native `dblclick` is intentionally NOT used. The browser fires dblclick
+ * from a pair of clicks within ~500ms anywhere on the same element, and
+ * users were seeing single-feeling clicks register as zoom-out. This
+ * tracker requires:
+ *   - Two `click` events within 280ms
+ *   - Both within 6 pixels of each other
+ *   - The first click NOT consumed by a dot / cluster (those call
+ *     stopPropagation so their clicks never reach this map-level handler)
+ * Anything looser, and a missed dot click reads as a double-click.
  */
 function DoubleClickZoomOut({ onReturnToGlobe }: { onReturnToGlobe?: () => void }) {
   const reduced = useReducedMotion();
+  const lastClickRef = useRef<{ t: number; x: number; y: number } | null>(null);
   const map = useMapEvents({
-    dblclick() {
+    click(e) {
+      const ev = e as L.LeafletMouseEvent;
+      const cp = ev.containerPoint;
+      if (!cp) return;
+      const now = Date.now();
+      const prev = lastClickRef.current;
+      const isDouble =
+        !!prev &&
+        now - prev.t < 280 &&
+        Math.abs(cp.x - prev.x) < 6 &&
+        Math.abs(cp.y - prev.y) < 6;
+
+      if (!isDouble) {
+        lastClickRef.current = { t: now, x: cp.x, y: cp.y };
+        return;
+      }
+      // Confirmed double-click on the map background — clear the tracker
+      // and run the zoom-out.
+      lastClickRef.current = null;
+
       const z = Math.round(map.getZoom());
-      // Find the next ladder rung strictly below current zoom.
       let next = -Infinity;
       for (let i = DBLCLICK_OUT_STEPS.length - 1; i >= 0; i--) {
         if (DBLCLICK_OUT_STEPS[i] < z) {
