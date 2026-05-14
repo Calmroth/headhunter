@@ -206,53 +206,18 @@ export function MapView({
     return FIRMS.filter((f) => f.countryCode === focusedCountryCode);
   }, [focusedCountryCode]);
 
-  const countryStyle = (f: CountryFeature): L.PathOptions => {
-    const alpha2 = NUMERIC_TO_ALPHA2[f.id];
-    const isFocused = alpha2 && alpha2 === focusedCountryCode;
-    const isMatch = alpha2 && matchingCountryIds?.has(alpha2);
-    const someFocused = !!focusedCountryCode;
-    const dimOthers = someFocused && !isFocused;
-
-    // No stroke at rest: the tile's own country borders already provide the
-    // edge. We only draw a border in active states, and we use BORDERLINE
-    // (soft paper tone), never Deep Ink, so the line blends with the map
-    // instead of cutting across it.
-    let strokeColor = BORDERLINE;
-    let strokeWeight = 0;
-    let strokeOpacity = 0;
-    if (isFocused) {
-      strokeColor = BORDERLINE;
-      strokeWeight = 1.25;
-      strokeOpacity = 0.85;
-    } else if (isMatch) {
-      strokeColor = OXBLOOD;
-      strokeWeight = 0.75;
-      strokeOpacity = 0.45;
-    }
-    // dimOthers gets no stroke and no fill — recedes via absence, not via ink.
-
-    // Fills are intentionally a hint, not a wash. Several countries
-    // (Russia, Antarctica, Fiji) carry antimeridian-crossing polygons in
-    // world-atlas; any meaningful fill on them paints a band across the
-    // entire map. So fills stay <= 0.18, and the stroke carries the
-    // affordance.
-    let fillColor = CARD_TONE;
-    let fillOpacity = 0;
-    if (isMatch) {
-      fillColor = OXBLOOD;
-      fillOpacity = 0.05;
-    } else if (isFocused) {
-      fillColor = CARD_TONE;
-      // Light mode: a soft paper wash inside the focused border. Dark mode:
-      // no fill — the BORDERLINE stroke (opacity 0.85, weight 1.25) is
-      // already strongly visible against the dark tile base and any paper
-      // tint at this scale reads as a glaring highlight.
-      fillOpacity = theme === 'dark' ? 0 : 0.18;
-    } else if (dimOthers) {
-      // Don't tint dim countries; just let their stroke fade in the
-      // strokeOpacity branch above.
-      fillOpacity = 0;
-    }
+  const countryStyle = (_f: CountryFeature): L.PathOptions => {
+    // Country polygons carry NO persistent style. No focus stroke, no match
+    // tint, no dim wash. Outline + highlight appear only on mouseover, and
+    // only while a continent is in view (zoom <= REGION_ZOOM); past that, the
+    // entire countriesPane is hidden via the `.is-zoomed-deep` class set by
+    // CountryInteractionGate. Filtering / focus state still drives the firm
+    // markers and the rails — just not the polygon ink.
+    const fillColor = CARD_TONE;
+    const fillOpacity = 0;
+    const strokeColor = BORDERLINE;
+    const strokeWeight = 0;
+    const strokeOpacity = 0;
 
     return {
       stroke: strokeWeight > 0,
@@ -310,24 +275,21 @@ export function MapView({
               layer.on({
                 mouseover: (e) => {
                   const path = e.target as L.Path;
-                  // Past country zoom, country interactions are off — bail
-                  // before applying any hover ink. Leaflet's .leaflet-interactive
-                  // class re-enables pointer-events on individual paths even
-                  // when the pane has pointer-events:none, so we gate in JS.
+                  // Country outline + fill ONLY appear on hover, and ONLY
+                  // while a continent is in view. Past REGION_ZOOM, the
+                  // entire countriesPane is hidden via `.is-zoomed-deep`,
+                  // but we double-gate here in JS because Leaflet re-enables
+                  // pointer-events on individual interactive paths even when
+                  // the pane has pointer-events:none.
                   const m = (path as unknown as { _map?: L.Map })._map;
-                  if (m && m.getZoom() >= COUNTRY_ZOOM) return;
-                  const isFocused = alpha2 === focusedCountryCode;
-                  // Touch-feedback flash — at continent / world zoom the
-                  // persistent hover-fill turned into a wash as the cursor
-                  // dragged across polygons. Now: brief acknowledgment, then
-                  // auto-fade so the hover doesn't accumulate.
+                  if (m && m.getZoom() > REGION_ZOOM) return;
+                  // Brief acknowledgment, then auto-fade so the hover doesn't
+                  // accumulate as the cursor drags across polygons. Light
+                  // mode gets a faint paper fill; dark mode is stroke-only
+                  // (paper tones wash against the dark tile base).
                   path.setStyle({
                     fillColor: CARD_TONE,
-                    // Same logic as the rest-state fill — paper tones at any
-                    // meaningful opacity wash out against the dark tile base.
-                    // Dark mode: stroke-only feedback.
-                    fillOpacity:
-                      theme === 'dark' ? 0 : isFocused ? 0.055 : 0.035,
+                    fillOpacity: theme === 'dark' ? 0 : 0.04,
                     stroke: true,
                     color: BORDERLINE,
                     weight: 1.25,
@@ -949,7 +911,10 @@ function CountryInteractionGate() {
   useEffect(() => {
     const root = map.getContainer();
     const apply = () => {
-      root.classList.toggle('is-zoomed-deep', map.getZoom() >= COUNTRY_ZOOM);
+      // Hide country polygons as soon as the user zooms past continent view.
+      // At REGION_ZOOM (6) or shallower, polygons are interactive on hover.
+      // At zoom > REGION_ZOOM, the entire pane is hidden via CSS.
+      root.classList.toggle('is-zoomed-deep', map.getZoom() > REGION_ZOOM);
     };
     apply();
     map.on('zoomend', apply);
