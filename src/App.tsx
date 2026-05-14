@@ -302,6 +302,35 @@ export function App() {
   }, [profile]);
 
   /**
+   * The user's home country + city — derived from the profile when signed
+   * in, or from geolocation otherwise. Drives the FirmsList sort order
+   * (home country / city floats to the top) and the ambient beacon set.
+   * When neither source is available these stay null and the list sorts
+   * by country alphabetical without a home group.
+   */
+  const homeContext = useMemo<{ countryCode: string | null; city: string | null }>(() => {
+    if (profile?.city && profile?.countryCode) {
+      return { countryCode: profile.countryCode, city: profile.city };
+    }
+    if (userLoc) {
+      // Find the nearest indexed firm and use its country + city as the home
+      // proxy. Approximate enough: firm data is city-level, so the nearest
+      // firm's city is the user's effective city anyway.
+      let nearest: { firm: typeof FIRMS[number]; d2: number } | null = null;
+      for (const f of FIRMS) {
+        const dLat = f.lat - userLoc.lat;
+        const dLng = f.lng - userLoc.lng;
+        const d2 = dLat * dLat + dLng * dLng;
+        if (!nearest || d2 < nearest.d2) nearest = { firm: f, d2 };
+      }
+      if (nearest) {
+        return { countryCode: nearest.firm.countryCode, city: nearest.firm.city };
+      }
+    }
+    return { countryCode: null, city: null };
+  }, [profile?.city, profile?.countryCode, userLoc]);
+
+  /**
    * Firms in the user's home city — used to drive the ambient beacon on the
    * map. Signed-in users: match on profile.city (string). Unsigned users
    * with geolocation: anything within ~30 km of their coords (degree box,
@@ -575,7 +604,8 @@ export function App() {
       <div className="stage">
         <FirmsList
           focusedCountryCode={regionAlpha2 ?? profile?.countryCode ?? null}
-          residentCity={profile?.city}
+          homeCountryCode={homeContext.countryCode}
+          residentCity={homeContext.city ?? undefined}
           focusedFirmId={focusedFirmId}
           hoveredFirmId={hoveredFirmId}
           matchingFirmIds={matchingFirmIds}

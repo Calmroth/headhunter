@@ -7,6 +7,8 @@ import './FirmsList.css';
 
 type Props = {
   focusedCountryCode: string | null; // alpha-2
+  /** ISO alpha-2 of the user's home country, used to float home firms to the top. */
+  homeCountryCode?: string | null;
   residentCity?: string;
   focusedFirmId: string | null;
   hoveredFirmId?: string | null;
@@ -21,6 +23,7 @@ type Props = {
 
 export function FirmsList({
   focusedCountryCode,
+  homeCountryCode,
   residentCity,
   focusedFirmId,
   hoveredFirmId,
@@ -32,14 +35,6 @@ export function FirmsList({
   onHoverFirm,
   onSelectFirm,
 }: Props) {
-  // Only the *clicked* (focused) firm pins to the top of the list. Rail
-  // hover used to also pin via `hoveredFirmId`, but that created a feedback
-  // loop: hovering a row sorted it to position 0, the row slid out from
-  // under the cursor, mouseleave fired, un-pin, slide back, mouseenter,
-  // repeat — visible as a flicker on the column. Hover still drives the
-  // map preview pan and the connector lines, but it no longer reorders.
-  const previewId = focusedFirmId ?? null;
-
   const firms = useMemo(() => {
     const list = (focusedCountryCode
       ? FIRMS.filter((f) => f.countryCode === focusedCountryCode)
@@ -49,22 +44,39 @@ export function FirmsList({
     const counts = new Map<string, number>();
     for (const j of JOBS) counts.set(j.firmId, (counts.get(j.firmId) ?? 0) + 1);
 
+    // Sort order (no clicked-firm pin — clicked stays where geography says):
+    //  1) Home country first (the user's current location).
+    //  2) Home city first within the home country.
+    //  3) Country name alphabetical for everyone else.
+    //  4) City name alphabetical within country.
+    //  5) Role count desc within city (busiest firms surface first).
+    //  6) Firm name alphabetical (stable tiebreak).
     list.sort((a, b) => {
-      // Clicked firm pinned to the top.
-      const aPrev = previewId === a.id ? 1 : 0;
-      const bPrev = previewId === b.id ? 1 : 0;
-      if (aPrev !== bPrev) return bPrev - aPrev;
-      const aHome = residentCity && a.city === residentCity ? 1 : 0;
-      const bHome = residentCity && b.city === residentCity ? 1 : 0;
-      if (aHome !== bHome) return bHome - aHome;
+      const aIsHomeCountry = !!homeCountryCode && a.countryCode === homeCountryCode;
+      const bIsHomeCountry = !!homeCountryCode && b.countryCode === homeCountryCode;
+      if (aIsHomeCountry !== bIsHomeCountry) return aIsHomeCountry ? -1 : 1;
+
+      if (aIsHomeCountry && bIsHomeCountry) {
+        const aIsHomeCity = !!residentCity && a.city === residentCity;
+        const bIsHomeCity = !!residentCity && b.city === residentCity;
+        if (aIsHomeCity !== bIsHomeCity) return aIsHomeCity ? -1 : 1;
+      }
+
+      const byCountry = a.country.localeCompare(b.country);
+      if (byCountry !== 0) return byCountry;
+
+      const byCity = a.city.localeCompare(b.city);
+      if (byCity !== 0) return byCity;
+
       const aN = counts.get(a.id) ?? 0;
       const bN = counts.get(b.id) ?? 0;
       if (aN !== bN) return bN - aN;
+
       return a.name.localeCompare(b.name);
     });
 
     return list.map((f) => ({ firm: f, roleCount: counts.get(f.id) ?? 0 }));
-  }, [focusedCountryCode, residentCity, filteredFirmIds, previewId]);
+  }, [focusedCountryCode, homeCountryCode, residentCity, filteredFirmIds]);
 
   const heading = focusedCountryCode ? 'Consultancies in region' : 'Featured consultancies';
 
@@ -114,13 +126,16 @@ export function FirmsList({
     );
     node?.scrollIntoView({ block: 'nearest' });
   }, [kbdIndex, firms]);
-  // Always pin scroll to top when the previewed firm changes — sort-to-top
-  // puts it there already, so we just need to make sure it's visible without
-  // dragging the user's scroll position around.
+  // When a firm is clicked (focused), scroll its row into view so the user
+  // can see what they selected — but only if it isn't already on screen.
+  // No longer scrolls to row 0; the firm stays in its sort position.
   useEffect(() => {
-    if (!previewId || !scrollRef.current) return;
-    scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [previewId]);
+    if (!focusedFirmId || !scrollRef.current) return;
+    const node = scrollRef.current.querySelector<HTMLElement>(
+      `[data-firm-id="${CSS.escape(focusedFirmId)}"]`
+    );
+    node?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [focusedFirmId]);
 
   return (
     <aside className="firms" aria-labelledby="firms-heading">
