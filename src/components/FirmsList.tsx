@@ -32,11 +32,13 @@ export function FirmsList({
   onHoverFirm,
   onSelectFirm,
 }: Props) {
-  // The previewed firm — clicked (focused) or rail-hovered — floats to the
-  // top of the list. Rail-hover comes via hoveredFirmId; map-dot hover no
-  // longer feeds into this state, so the list stays still while the user
-  // scans the map.
-  const previewId = focusedFirmId ?? hoveredFirmId ?? null;
+  // Only the *clicked* (focused) firm pins to the top of the list. Rail
+  // hover used to also pin via `hoveredFirmId`, but that created a feedback
+  // loop: hovering a row sorted it to position 0, the row slid out from
+  // under the cursor, mouseleave fired, un-pin, slide back, mouseenter,
+  // repeat — visible as a flicker on the column. Hover still drives the
+  // map preview pan and the connector lines, but it no longer reorders.
+  const previewId = focusedFirmId ?? null;
 
   const firms = useMemo(() => {
     const list = (focusedCountryCode
@@ -48,7 +50,7 @@ export function FirmsList({
     for (const j of JOBS) counts.set(j.firmId, (counts.get(j.firmId) ?? 0) + 1);
 
     list.sort((a, b) => {
-      // Hovered/focused firm pinned to the top.
+      // Clicked firm pinned to the top.
       const aPrev = previewId === a.id ? 1 : 0;
       const bPrev = previewId === b.id ? 1 : 0;
       if (aPrev !== bPrev) return bPrev - aPrev;
