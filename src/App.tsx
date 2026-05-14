@@ -546,49 +546,18 @@ export function App() {
   const handleOpenJob = (jobId: string) => {
     const job = JOBS.find((j) => j.id === jobId);
     if (!job) return;
-    const firm = FIRMS_BY_ID[job.firmId];
-    if (!firm) return;
-    setFocusedFirmId(firm.id);
-    setMapTarget({ kind: 'firm', lat: firm.lat, lng: firm.lng, firmId: firm.id, key: nextKey() });
+    // Open the JobDetail overlay WITHOUT touching map state. The map stays
+    // mounted underneath (see render below) and returning via Back lands
+    // the user on the exact same view they had — same zoom, same center,
+    // same focused firm. Previously this also did setFocusedFirmId +
+    // setMapTarget, which re-flew the map; combined with the map being
+    // unmounted while JobDetail rendered, returning landed at COUNTRY_ZOOM
+    // even if the user had been at CITY_ZOOM.
     setOpenJobId(jobId);
     setView('detail');
   };
 
   const openJob = openJobId ? JOBS.find((j) => j.id === openJobId) ?? null : null;
-
-  if (openJob) {
-    return (
-      <div className="app">
-        <TopBar profile={profile} onRequestSignIn={requestSignIn} onSignOut={signOut} theme={theme} onToggleTheme={toggleTheme} />
-        <Suspense
-          fallback={
-            <div className="lazy-skeleton" aria-hidden="true">
-              <div className="lazy-skeleton-shimmer" />
-            </div>
-          }
-        >
-          {view === 'apply' ? (
-            <JobApply
-              job={openJob}
-              applicantName={profile?.name}
-              onBack={() => setView('detail')}
-            />
-          ) : (
-            <JobDetail
-              job={openJob}
-              onBack={() => setOpenJobId(null)}
-              onApply={() => setView('apply')}
-            />
-          )}
-        </Suspense>
-        <LinkedInSignIn
-          open={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-          onAuthorized={handleAuthorized}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="app">
@@ -708,6 +677,38 @@ export function App() {
         onClose={() => setAuthModalOpen(false)}
         onAuthorized={handleAuthorized}
       />
+
+      {openJob && (
+        // Overlay on top of the still-mounted map shell. Back closes the
+        // overlay and the user lands on exactly the same map view they had
+        // when they clicked into the role — no re-mount, no re-fly.
+        <div className="job-overlay">
+          <Suspense
+            fallback={
+              <div className="lazy-skeleton" aria-hidden="true">
+                <div className="lazy-skeleton-shimmer" />
+              </div>
+            }
+          >
+            {view === 'apply' ? (
+              <JobApply
+                job={openJob}
+                applicantName={profile?.name}
+                onBack={() => setView('detail')}
+              />
+            ) : (
+              <JobDetail
+                job={openJob}
+                onBack={() => {
+                  setOpenJobId(null);
+                  setView('detail');
+                }}
+                onApply={() => setView('apply')}
+              />
+            )}
+          </Suspense>
+        </div>
+      )}
     </div>
   );
 }
