@@ -104,6 +104,95 @@
   stroke-linejoin: round;
 }
 
+/* Donate popover — anchored below the donate button, paper card with a
+   hairline border. Three stacked options (Swish, PayPal, Card). */
+.donate {
+  position: relative;
+}
+.donate-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 700;
+  width: 17rem;
+  background: var(--warm-paper);
+  border: 1px solid var(--hairline);
+  border-radius: var(--rad-md);
+  box-shadow: var(--shadow-structural);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  animation: donate-popover-in 220ms var(--ease-out-quart) both;
+  transform-origin: top right;
+}
+@keyframes donate-popover-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.donate-popover-label {
+  margin: 0;
+  padding: 0.375rem 0.5rem 0.25rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--quiet-ink);
+}
+.donate-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem;
+  border: 0;
+  border-radius: var(--rad-sm);
+  background: transparent;
+  color: var(--deep-ink);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--d-base) var(--ease-out-quart);
+}
+.donate-option:hover {
+  background: var(--card-tone);
+}
+.donate-option-mark {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--rad-sm);
+  background: var(--deep-ink);
+  color: var(--warm-paper);
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.donate-option-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+}
+.donate-option-name {
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--deep-ink);
+}
+.donate-option-meta {
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--quiet-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .donate-popover { animation: none; }
+}
+
 /* Below 900px the topbar collapses: hide the share cluster to keep mobile
    chrome breathable. Users can still share via the OS share sheet. */
 @media (max-width: 900px) {

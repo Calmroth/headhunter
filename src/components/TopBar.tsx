@@ -12,9 +12,13 @@ type Props = {
 };
 
 const LIKE_KEY = 'hh.liked';
-// Donate destination. Swap to a different sponsorship URL (Buy Me a Coffee,
-// Ko-fi, Patreon, etc.) without touching the surface.
-const DONATE_URL = 'https://github.com/sponsors/Calmroth';
+// Donate destinations. Replace these with your real numbers / URLs:
+//   - SWISH_NUMBER: the recipient's Swish phone number (Swedish format).
+//   - PAYPAL_URL: a paypal.me link or paypal.com/donate URL.
+//   - CARD_URL: a Stripe Payment Link, Buy Me a Coffee, Ko-fi, etc.
+const SWISH_NUMBER = '+46 70 123 45 67';
+const PAYPAL_URL = 'https://paypal.me/Calmroth';
+const CARD_URL = 'https://github.com/sponsors/Calmroth';
 
 function readLiked(): boolean {
   try {
@@ -30,6 +34,39 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
   const [liked, setLiked] = useState<boolean>(() =>
     typeof window !== 'undefined' ? readLiked() : false
   );
+
+  // Donate popover state. Stays a popover (not a modal) — donation is a
+  // utility, not a focus-stealing action. Closes on outside click or ESC.
+  const [donateOpen, setDonateOpen] = useState(false);
+  const donateRef = useRef<HTMLDivElement | null>(null);
+  const [swishCopied, setSwishCopied] = useState(false);
+  useEffect(() => {
+    if (!donateOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (donateRef.current && !donateRef.current.contains(e.target as Node)) {
+        setDonateOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDonateOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [donateOpen]);
+
+  const copySwish = async () => {
+    try {
+      await navigator.clipboard.writeText(SWISH_NUMBER);
+      setSwishCopied(true);
+      window.setTimeout(() => setSwishCopied(false), 1800);
+    } catch {
+      /* clipboard blocked — fall through; the number is still visible */
+    }
+  };
 
   const toggleLike = () => {
     const next = !liked;
@@ -147,19 +184,73 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
 
         <span className="topbar-share-divider" aria-hidden="true" />
 
-        <a
-          className="topbar-share-donate"
-          href={DONATE_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          aria-label="Donate to support Headhunter"
-          title="Donate"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-          <span>Donate</span>
-        </a>
+        <div className="donate" ref={donateRef}>
+          <button
+            type="button"
+            className="topbar-share-donate"
+            aria-haspopup="menu"
+            aria-expanded={donateOpen}
+            aria-label="Donate to support Headhunter"
+            onClick={() => setDonateOpen((v) => !v)}
+            title="Donate"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            <span>Donate</span>
+          </button>
+
+          {donateOpen && (
+            <div className="donate-popover" role="menu">
+              <p className="mono donate-popover-label">Support Headhunter</p>
+
+              <button
+                type="button"
+                className="donate-option"
+                onClick={copySwish}
+                role="menuitem"
+              >
+                <span className="donate-option-mark mono">Sw</span>
+                <span className="donate-option-body">
+                  <span className="donate-option-name serif">Swish</span>
+                  <span className="donate-option-meta mono">
+                    {swishCopied ? 'NUMBER COPIED' : SWISH_NUMBER}
+                  </span>
+                </span>
+              </button>
+
+              <a
+                className="donate-option"
+                href={PAYPAL_URL}
+                target="_blank"
+                rel="noreferrer noopener"
+                role="menuitem"
+                onClick={() => setDonateOpen(false)}
+              >
+                <span className="donate-option-mark mono">Pp</span>
+                <span className="donate-option-body">
+                  <span className="donate-option-name serif">PayPal</span>
+                  <span className="donate-option-meta mono">paypal.me</span>
+                </span>
+              </a>
+
+              <a
+                className="donate-option"
+                href={CARD_URL}
+                target="_blank"
+                rel="noreferrer noopener"
+                role="menuitem"
+                onClick={() => setDonateOpen(false)}
+              >
+                <span className="donate-option-mark mono">Cd</span>
+                <span className="donate-option-body">
+                  <span className="donate-option-name serif">Card</span>
+                  <span className="donate-option-meta mono">SECURE CHECKOUT</span>
+                </span>
+              </a>
+            </div>
+          )}
+        </div>
       </div>
 
       <nav className="topbar-actions" aria-label="Account">
