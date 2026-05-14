@@ -16,17 +16,27 @@
   border: 1px solid var(--hairline);
   border-radius: var(--rad-md);
   box-shadow: var(--shadow-ambient);
-  transition: border-color var(--d-base) var(--ease-out-quart),
-    box-shadow var(--d-base) var(--ease-out-quart);
+  /* Subtle lift on focus — composited transform only, never animating layout. */
+  transform: translateY(0);
+  transition:
+    border-color var(--d-base) var(--ease-out-quart),
+    box-shadow var(--d-base) var(--ease-out-quart),
+    transform var(--d-base) var(--ease-out-quart);
 }
 .search-field:focus-within {
   border-color: var(--deep-ink);
   box-shadow: var(--shadow-structural);
+  transform: translateY(-1px);
 }
 
 .search-icon {
   color: var(--quiet-ink);
   flex-shrink: 0;
+  /* Echoes the field's focus stroke — icon darkens with the surface. */
+  transition: color var(--d-base) var(--ease-out-quart);
+}
+.search-field:focus-within .search-icon {
+  color: var(--deep-ink);
 }
 
 .search-input-wrap {

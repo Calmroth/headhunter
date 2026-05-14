@@ -624,7 +624,7 @@ function FirmMarkersLayer({
               const currentZoom = map.getZoom();
               const fitZoom = map.getBoundsZoom(c.bounds, false, L.point(80, 80));
               const targetZoom = Math.max(currentZoom, Math.min(fitZoom, CITY_ZOOM));
-              map.flyTo(c.bounds.getCenter(), targetZoom, { duration: 0.9 });
+              map.flyTo(c.bounds.getCenter(), targetZoom, { duration: 0.9, easeLinearity: 0.1 });
             };
             return (
               <Fragment key={`cluster-${c.key}`}>
@@ -850,7 +850,7 @@ function SteppedWheelZoom() {
         map.setView(targetCenter, next, { animate: false });
         settle();
       } else {
-        map.flyTo(targetCenter, next, { duration: 0.85 });
+        map.flyTo(targetCenter, next, { duration: 0.85, easeLinearity: 0.1 });
         window.setTimeout(settle, 900);
       }
     };
@@ -882,14 +882,14 @@ function FlyToTarget({ target }: { target: MapTarget | null }) {
       // "World" = the Europe-fit view: frame to EUROPE_BOUNDS.
       const bounds = L.latLngBounds(EUROPE_BOUNDS);
       if (reduced) map.fitBounds(bounds, { padding: [24, 24], animate: false });
-      else map.flyToBounds(bounds, { padding: [24, 24], duration: 1.1 });
+      else map.flyToBounds(bounds, { padding: [24, 24], duration: 1.1, easeLinearity: 0.1 });
       return;
     }
 
     if (target.kind === 'world-at') {
       // Centered Europe view biased toward a coord (e.g. user's location).
       if (reduced) map.setView([target.lat, target.lng], initialZoom, { animate: false });
-      else map.flyTo([target.lat, target.lng], initialZoom, { duration: 1.1 });
+      else map.flyTo([target.lat, target.lng], initialZoom, { duration: 1.1, easeLinearity: 0.1 });
       return;
     }
 
@@ -903,7 +903,7 @@ function FlyToTarget({ target }: { target: MapTarget | null }) {
       if (reduced) {
         map.fitBounds(bounds, { padding: [48, 48], animate: false, maxZoom: COUNTRY_ZOOM });
       } else {
-        map.flyToBounds(bounds, { padding: [48, 48], duration: 1.2, maxZoom: COUNTRY_ZOOM });
+        map.flyToBounds(bounds, { padding: [48, 48], duration: 1.2, maxZoom: COUNTRY_ZOOM, easeLinearity: 0.1 });
       }
       return;
     }
@@ -936,7 +936,7 @@ function FlyToTarget({ target }: { target: MapTarget | null }) {
     } else if (current === targetZoom) {
       map.panTo([target.lat, target.lng], { duration: 0.7, easeLinearity: 0.25 });
     } else {
-      map.flyTo([target.lat, target.lng], targetZoom, { duration: 1.1 });
+      map.flyTo([target.lat, target.lng], targetZoom, { duration: 1.1, easeLinearity: 0.1 });
     }
   }, [target, map, reduced]);
   return null;
@@ -955,7 +955,7 @@ function DoubleClickZoomOut({ onReturnToGlobe }: { onReturnToGlobe?: () => void 
       if (next < z) {
         const center = map.getCenter();
         if (reduced) map.setView(center, next, { animate: false });
-        else map.flyTo(center, next, { duration: 0.9 });
+        else map.flyTo(center, next, { duration: 0.9, easeLinearity: 0.1 });
         return;
       }
       if (onReturnToGlobe) onReturnToGlobe();

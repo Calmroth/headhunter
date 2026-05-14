@@ -155,8 +155,12 @@
   display: none !important;
 }
 
-/* Country tooltip — paper-toned chip that follows the cursor. */
+/* Country tooltip — paper-toned chip that follows the cursor. Fade + rise
+   on mount, outQuart, matches the project's motion vocabulary instead of
+   Leaflet's default snap-in. Transform/opacity only — no layout animation. */
 .country-tooltip.leaflet-tooltip {
+  animation: country-tooltip-in 200ms var(--ease-out-quart) both;
+  transform-origin: 50% 100%;
   background: var(--warm-paper);
   color: var(--deep-ink);
   border: 1px solid var(--hairline);
@@ -168,6 +172,13 @@
   align-items: baseline;
   gap: 0.5rem;
   white-space: nowrap;
+}
+@keyframes country-tooltip-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .country-tooltip.leaflet-tooltip { animation: none; }
 }
 .country-tooltip.leaflet-tooltip::before {
   border-top-color: var(--warm-paper);

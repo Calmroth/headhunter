@@ -170,13 +170,22 @@
   padding: 0.35rem 0.625rem;
   border-radius: 999px;
   cursor: pointer;
+  /* Match the rest of the project's motion vocabulary: subtle lift on
+     hover, slight inset on press, considered (not snappy) on activation
+     via --d-base. Transform-only, never animating layout. */
+  transform: translateY(0);
   transition:
-    background var(--d-fast) var(--ease-out-quart),
-    border-color var(--d-fast) var(--ease-out-quart),
-    color var(--d-fast) var(--ease-out-quart);
+    background var(--d-base) var(--ease-out-quart),
+    border-color var(--d-base) var(--ease-out-quart),
+    color var(--d-base) var(--ease-out-quart),
+    transform var(--d-fast) var(--ease-out-quart);
 }
 .firms-filters-chip:hover {
   border-color: var(--deep-ink);
+  transform: translateY(-1px);
+}
+.firms-filters-chip:active {
+  transform: translateY(1px);
 }
 .firms-filters-chip.is-active {
   background: var(--deep-ink);
