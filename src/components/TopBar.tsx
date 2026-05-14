@@ -14,10 +14,10 @@ type Props = {
 const LIKE_KEY = 'hh.liked';
 // Donate destinations. Replace these with your real numbers / URLs:
 //   - SWISH_NUMBER: the recipient's Swish phone number (Swedish format).
-//   - PAYPAL_URL: a paypal.me link or paypal.com/donate URL.
-//   - CARD_URL: a Stripe Payment Link, Buy Me a Coffee, Ko-fi, etc.
+//   - CARD_URL: a hosted card-checkout URL (PayPal NCP, Stripe Payment Link,
+//     Buy Me a Coffee, Ko-fi, etc.). PayPal's NCP page handles both signed-in
+//     PayPal flow and unauthenticated card-only flow on the same surface.
 const SWISH_NUMBER = '+46 70 569 54 96';
-const PAYPAL_URL = 'https://www.paypal.com/ncp/payment/KSQ33L2AGZHNS';
 const CARD_URL = 'https://www.paypal.com/ncp/payment/KSQ33L2AGZHNS';
 
 function readLiked(): boolean {
@@ -240,21 +240,6 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
 
               <a
                 className="donate-option"
-                href={PAYPAL_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                role="menuitem"
-                onClick={() => setDonateOpen(false)}
-              >
-                <span className="donate-option-mark mono">Pp</span>
-                <span className="donate-option-body">
-                  <span className="donate-option-name serif">PayPal</span>
-                  <span className="donate-option-meta mono">PAYPAL CHECKOUT</span>
-                </span>
-              </a>
-
-              <a
-                className="donate-option"
                 href={CARD_URL}
                 target="_blank"
                 rel="noreferrer noopener"
@@ -264,7 +249,7 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
                 <span className="donate-option-mark mono">Cd</span>
                 <span className="donate-option-body">
                   <span className="donate-option-name serif">Card</span>
-                  <span className="donate-option-meta mono">GUEST CARD CHECKOUT</span>
+                  <span className="donate-option-meta mono">SECURE CHECKOUT</span>
                 </span>
               </a>
             </div>
