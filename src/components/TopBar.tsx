@@ -16,9 +16,9 @@ const LIKE_KEY = 'hh.liked';
 //   - SWISH_NUMBER: the recipient's Swish phone number (Swedish format).
 //   - PAYPAL_URL: a paypal.me link or paypal.com/donate URL.
 //   - CARD_URL: a Stripe Payment Link, Buy Me a Coffee, Ko-fi, etc.
-const SWISH_NUMBER = '+46 70 123 45 67';
-const PAYPAL_URL = 'https://paypal.me/Calmroth';
-const CARD_URL = 'https://github.com/sponsors/Calmroth';
+const SWISH_NUMBER = '+46 70 569 54 96';
+const PAYPAL_URL = 'https://www.paypal.com/ncp/payment/KSQ33L2AGZHNS';
+const CARD_URL = 'https://www.paypal.com/ncp/payment/KSQ33L2AGZHNS';
 
 function readLiked(): boolean {
   try {
@@ -230,7 +230,7 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
                 <span className="donate-option-mark mono">Pp</span>
                 <span className="donate-option-body">
                   <span className="donate-option-name serif">PayPal</span>
-                  <span className="donate-option-meta mono">paypal.me</span>
+                  <span className="donate-option-meta mono">PAYPAL CHECKOUT</span>
                 </span>
               </a>
 
@@ -245,7 +245,7 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
                 <span className="donate-option-mark mono">Cd</span>
                 <span className="donate-option-body">
                   <span className="donate-option-name serif">Card</span>
-                  <span className="donate-option-meta mono">SECURE CHECKOUT</span>
+                  <span className="donate-option-meta mono">GUEST CARD CHECKOUT</span>
                 </span>
               </a>
             </div>
