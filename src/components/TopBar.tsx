@@ -11,9 +11,68 @@ type Props = {
   onToggleTheme: () => void;
 };
 
+const LIKE_KEY = 'hh.liked';
+// Donate destination. Swap to a different sponsorship URL (Buy Me a Coffee,
+// Ko-fi, Patreon, etc.) without touching the surface.
+const DONATE_URL = 'https://github.com/sponsors/Calmroth';
+
+function readLiked(): boolean {
+  try {
+    return window.localStorage.getItem(LIKE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleTheme }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const [liked, setLiked] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? readLiked() : false
+  );
+
+  const toggleLike = () => {
+    const next = !liked;
+    setLiked(next);
+    try {
+      if (next) window.localStorage.setItem(LIKE_KEY, '1');
+      else window.localStorage.removeItem(LIKE_KEY);
+    } catch {
+      /* localStorage blocked — in-memory only */
+    }
+  };
+
+  const handleShare = async () => {
+    const shareUrl = window.location.origin + window.location.pathname;
+    const shareTitle = 'Headhunter — creative jobs, mapped';
+    const shareText =
+      'A geographic discovery surface for creative jobs at firms that contract with large enterprises.';
+    // Web Share API is the right surface on mobile + supported browsers.
+    // Desktop fallback: open an X (Twitter) compose intent in a new tab.
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share({ url: shareUrl, title: shareTitle, text: shareText });
+        return;
+      } catch {
+        /* user cancelled — fall through to nothing */
+        return;
+      }
+    }
+    const intent = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+      shareUrl
+    )}&text=${encodeURIComponent(shareText)}`;
+    window.open(intent, '_blank', 'noopener,noreferrer');
+  };
+
+  const mailHref = (() => {
+    if (typeof window === 'undefined') return '#';
+    const url = window.location.origin + window.location.pathname;
+    const subject = encodeURIComponent('Headhunter — creative jobs, mapped');
+    const body = encodeURIComponent(
+      `Thought you might find this useful — a geographic discovery surface for creative jobs:\n\n${url}\n`
+    );
+    return `mailto:?subject=${subject}&body=${body}`;
+  })();
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -43,6 +102,65 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
       <a className="wordmark serif" href="/" aria-label="Lead Hunter home">
         Headhunter
       </a>
+
+      <div className="topbar-share" role="group" aria-label="Share & support">
+        <button
+          type="button"
+          className={`topbar-share-button ${liked ? 'is-liked' : ''}`}
+          onClick={toggleLike}
+          aria-pressed={liked}
+          aria-label={liked ? 'Unlike Headhunter' : 'Like Headhunter'}
+          title={liked ? 'Liked' : 'Like'}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          className="topbar-share-button"
+          onClick={handleShare}
+          aria-label="Share Headhunter"
+          title="Share"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+          </svg>
+        </button>
+
+        <a
+          className="topbar-share-button"
+          href={mailHref}
+          aria-label="Share via email"
+          title="Email"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+        </a>
+
+        <span className="topbar-share-divider" aria-hidden="true" />
+
+        <a
+          className="topbar-share-donate"
+          href={DONATE_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          aria-label="Donate to support Headhunter"
+          title="Donate"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          <span>Donate</span>
+        </a>
+      </div>
 
       <nav className="topbar-actions" aria-label="Account">
         <button

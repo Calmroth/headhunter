@@ -1,11 +1,118 @@
 .topbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: 0 var(--gutter);
   border-bottom: 1px solid var(--hairline);
   background: var(--warm-paper);
   height: var(--topbar-h);
+}
+
+.topbar-actions {
+  justify-self: end;
+}
+
+/* Center cluster: like, share, mail, donate. Hairline-bound, monochrome.
+   No provider brand color flooding — DESIGN.md's restrained palette. */
+.topbar-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--warm-paper);
+}
+.topbar-share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--quiet-ink);
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background var(--d-base) var(--ease-out-quart),
+    color var(--d-base) var(--ease-out-quart),
+    transform var(--d-fast) var(--ease-out-quart);
+}
+.topbar-share-button:hover {
+  background: var(--card-tone);
+  color: var(--deep-ink);
+  transform: translateY(-1px);
+}
+.topbar-share-button:active {
+  transform: translateY(1px);
+}
+.topbar-share-button.is-liked {
+  color: var(--oxblood);
+}
+.topbar-share-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.topbar-share-button.is-liked svg {
+  fill: currentColor;
+}
+.topbar-share-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--hairline);
+  margin: 0 0.125rem;
+}
+.topbar-share-donate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4rem 0.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--deep-ink);
+  color: var(--warm-paper);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background var(--d-base) var(--ease-out-quart),
+    transform var(--d-fast) var(--ease-out-quart);
+}
+.topbar-share-donate:hover {
+  background: var(--oxblood);
+  transform: translateY(-1px);
+}
+.topbar-share-donate:active {
+  transform: translateY(1px);
+}
+.topbar-share-donate svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Below 900px the topbar collapses: hide the share cluster to keep mobile
+   chrome breathable. Users can still share via the OS share sheet. */
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 1fr auto;
+  }
+  .topbar-share {
+    display: none;
+  }
 }
 
 .wordmark {
