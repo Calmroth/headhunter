@@ -158,25 +158,21 @@ export function App() {
     null
   );
 
-  // On first load (no profile yet), zoom out to full world and centre on the
-  // user's current geolocation if the browser allows it.
+  // On first load, leave the map at the default world view. We still ask the
+  // browser for the user's coordinates so the ambient "you are here" beacon
+  // can light up nearby firm dots, but we no longer pan to them — the
+  // continent-wide view is the intended initial framing.
   useEffect(() => {
     if (profile) return;
     if (!('geolocation' in navigator)) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setMapTarget({
-          kind: 'world-at',
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          key: nextKey(),
-        });
       },
       () => {
-        /* user denied — keep default world view */
+        /* user denied — no ambient beacons, world view stays */
       },
-      { enableHighAccuracy: false, maximumAge: 10 * 60_000, timeout: 4000 }
+      { enableHighAccuracy: false, maximumAge: 10 * 60_000, timeout: 8000 }
     );
     // We only want this on mount for unsigned visitors. profile changes are
     // handled by the other effects above.
