@@ -210,7 +210,26 @@ export function TopBar({ profile, onRequestSignIn, onSignOut, theme, onToggleThe
                 onClick={copySwish}
                 role="menuitem"
               >
-                <span className="donate-option-mark mono">Sw</span>
+                <span
+                  className="donate-option-mark donate-option-mark--swish"
+                  aria-hidden="true"
+                >
+                  {/* Approximation of the Swish brand mark: lowercase wordmark
+                      in the brand magenta. Recognizable to users in Sweden;
+                      swap for the official SVG when available. */}
+                  <svg viewBox="0 0 72 32">
+                    <rect width="72" height="32" rx="6" fill="#EF2D5E" />
+                    <text
+                      x="36"
+                      y="22"
+                      textAnchor="middle"
+                      className="swish-wordmark"
+                      fill="#ffffff"
+                    >
+                      swish
+                    </text>
+                  </svg>
+                </span>
                 <span className="donate-option-body">
                   <span className="donate-option-name serif">Swish</span>
                   <span className="donate-option-meta mono">

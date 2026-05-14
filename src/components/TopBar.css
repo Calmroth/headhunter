@@ -170,6 +170,26 @@
   letter-spacing: 0;
   text-transform: none;
 }
+/* Swish mark — wider so the wordmark reads. Background lives inside the SVG
+   so the mark can carry the brand magenta without dragging it into the
+   surrounding tokens. */
+.donate-option-mark--swish {
+  width: 56px;
+  background: transparent;
+  padding: 0;
+  overflow: hidden;
+}
+.donate-option-mark--swish svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.swish-wordmark {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+}
 .donate-option-body {
   display: flex;
   flex-direction: column;
