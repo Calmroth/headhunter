@@ -259,6 +259,45 @@ export function animatePopupIn(popupEl: HTMLElement) {
 }
 
 /**
+ * Closes the currently-open Leaflet popup with a short opacity + translate
+ * fade-out, then removes it from the map. Mirrors the entry animation from
+ * `animatePopupIn` so open and close share a vocabulary.
+ *
+ * Reduced-motion: closes immediately, no animation.
+ */
+export function closePopupWithFade(map: L.Map): void {
+  if (prefersReduce()) {
+    map.closePopup();
+    return;
+  }
+  const popupEl = document.querySelector<HTMLElement>(
+    '.leaflet-popup.firm-popup-leaflet'
+  );
+  if (!popupEl) {
+    map.closePopup();
+    return;
+  }
+  const wrap = popupEl.querySelector<HTMLElement>('.leaflet-popup-content-wrapper');
+  const tip = popupEl.querySelector<HTMLElement>('.leaflet-popup-tip');
+  const targets = [wrap, tip].filter((el): el is HTMLElement => !!el);
+  if (targets.length === 0) {
+    map.closePopup();
+    return;
+  }
+  animate(targets, {
+    opacity: [1, 0],
+    translateY: [0, 6],
+    duration: 200,
+    ease: 'outQuart',
+    onComplete: () => {
+      // The popup may have already been replaced by another firm's popup
+      // (rapid hover). closePopup() is a safe no-op in that case.
+      map.closePopup();
+    },
+  });
+}
+
+/**
  * First-paint splash orchestration. Choreographs the brand chrome of the home
  * view as one timeline: wordmark → topbar actions → three columns (center
  * leads, rails follow) → searchbar → footer.

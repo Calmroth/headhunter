@@ -23,7 +23,7 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { NUMERIC_TO_ALPHA2 } from '../data/countryCodeMap';
 import { monogram } from '../utils/monogram';
 import { FirmPopup } from './FirmPopup';
-import { animatePopupIn, pulseClick, pulseHover, startBeacon } from '../utils/animations';
+import { animatePopupIn, closePopupWithFade, pulseClick, pulseHover, startBeacon } from '../utils/animations';
 import './MapView.css';
 
 const COUNTRIES_URL = 'https://unpkg.com/world-atlas@2/countries-10m.json';
@@ -52,6 +52,12 @@ const REGION_ZOOM = 6;
 const COUNTRY_ZOOM = 9;
 const CITY_ZOOM = 12;
 const ZOOM_STEPS = [WORLD_ZOOM, REGION_ZOOM, COUNTRY_ZOOM, CITY_ZOOM] as const;
+// Dblclick collapses the four-step wheel-zoom ladder to a three-step zoom-out
+// ladder (city → country → world). REGION_ZOOM is intentionally skipped so
+// two dblclicks max take the user from deepest zoom to world view:
+//   - From CITY_ZOOM (12): dblclick → COUNTRY_ZOOM. Cities cluster, geography reads.
+//   - From COUNTRY_ZOOM (9) or shallower: dblclick → WORLD_ZOOM.
+const DBLCLICK_OUT_STEPS = [WORLD_ZOOM, COUNTRY_ZOOM, CITY_ZOOM] as const;
 
 // Europe bounding box, used as the initial view and the soft pan boundary.
 // SW = south of Spain / Crete; NE = top of Norway / east of Moscow.
@@ -387,8 +393,39 @@ function FirmMarkersLayer({
 }) {
   const map = useMap();
   const [zoom, setZoom] = useState<number>(() => map.getZoom());
+
+  // Popup close timer — set by dot mouseout, cleared by re-entry into the
+  // dot or the popup. Lets the popup fade out a moment after the cursor
+  // leaves the dot, while still letting the user move into the popup to
+  // read it without it disappearing mid-glance.
+  const closeTimerRef = useRef<number | null>(null);
+  const cancelClose = () => {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = null;
+      closePopupWithFade(map);
+    }, 240);
+  };
+
   useMapEvents({
     zoomend: () => setZoom(map.getZoom()),
+    // When a popup opens, attach mouse listeners to its DOM so the close
+    // timer pauses while the cursor is inside the panel. Leaflet rebuilds
+    // the popup element per open, so listeners get garbage-collected with
+    // the DOM — no explicit cleanup needed.
+    popupopen: (e) => {
+      const el = e.popup.getElement();
+      if (!el) return;
+      el.addEventListener('mouseenter', cancelClose);
+      el.addEventListener('mouseleave', scheduleClose);
+    },
+    popupclose: cancelClose,
   });
 
   // Refs for programmatic popup open.
@@ -744,6 +781,9 @@ function FirmMarkersLayer({
                 // the hover originates from a rail row.
                 const marker = e.target as L.CircleMarker;
                 pulseHover(marker, baseRadius);
+                // Re-entering a dot cancels any pending popup close (e.g.
+                // user briefly left and came back).
+                cancelClose();
                 // When a popup is already open on a different firm, slide
                 // it to the hovered firm so the user can scan the map.
                 if (focusedFirmId && focusedFirmId !== f.id) {
@@ -754,6 +794,10 @@ function FirmMarkersLayer({
                 // Reset radius in case the hover pulse left a stale value.
                 const marker = e.target as L.CircleMarker;
                 marker.setRadius(baseRadius);
+                // Schedule a fade-close of the popup. If the cursor moves
+                // into the popup itself before the timer fires, popupopen's
+                // mouseenter listener cancels it so the user can read.
+                scheduleClose();
               },
             }}
           >
@@ -943,16 +987,26 @@ function FlyToTarget({ target }: { target: MapTarget | null }) {
 }
 
 /**
- * Double-click steps OUT one rung on the four-stage zoom ladder.
- * At world view, falls through to the globe (3D) return handler.
+ * Double-click steps OUT one rung on the DBLCLICK_OUT_STEPS ladder
+ * (city → country → world). REGION_ZOOM is skipped so a user looking at a
+ * single firm at street level reaches world view in two dblclicks, never
+ * more — first to country (city now reads as a cluster), then to world.
+ * At world view, falls through to the optional globe (3D) return handler.
  */
 function DoubleClickZoomOut({ onReturnToGlobe }: { onReturnToGlobe?: () => void }) {
   const reduced = useReducedMotion();
   const map = useMapEvents({
     dblclick() {
       const z = Math.round(map.getZoom());
-      const next = nextZoomStep(z, -1);
-      if (next < z) {
+      // Find the next ladder rung strictly below current zoom.
+      let next = -Infinity;
+      for (let i = DBLCLICK_OUT_STEPS.length - 1; i >= 0; i--) {
+        if (DBLCLICK_OUT_STEPS[i] < z) {
+          next = DBLCLICK_OUT_STEPS[i];
+          break;
+        }
+      }
+      if (next > -Infinity) {
         const center = map.getCenter();
         if (reduced) map.setView(center, next, { animate: false });
         else map.flyTo(center, next, { duration: 0.9, easeLinearity: 0.1 });
