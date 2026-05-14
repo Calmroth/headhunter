@@ -93,31 +93,41 @@
     animation: none;
   }
 }
-/* Hover: dot grows, brightens to full saturation, and breathes. The breathe
-   is a fill-opacity oscillation 1.0 -> 0.75 -> 1.0; CSS applies the timing
-   function per-segment, so the curve is outQuart on each leg (never in-out
-   per DESIGN.md). */
+/* Hover: dot grows, fills warm-paper (the project's near-white tinted to the
+   brand hue; never #fff per DESIGN.md), and breathes via fill-opacity
+   oscillation. CSS applies the timing function per-segment so each leg
+   runs outQuart independently (no in-out family curve). */
 .firm-marker--hover {
   transform: scale(1.35);
+  fill: var(--warm-paper) !important;
   fill-opacity: 1 !important;
+  stroke: var(--deep-ink) !important;
+  stroke-width: 1.75 !important;
+  stroke-opacity: 1;
   animation: firm-marker-drop 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards,
              firm-dot-pulse 1400ms var(--ease-out-quart) infinite;
 }
-/* Active: same brightening as hover plus a Deep Ink ring (DESIGN.md §4
-   Flat-By-Default Rule — selection by stroke, not glow) and a tighter
-   pulse cadence so the active state reads as more insistent than a hover. */
+/* Active: same warm-paper fill as hover, thicker Deep Ink ring (DESIGN.md
+   §4 Flat-By-Default Rule — selection by stroke, not glow), tighter pulse
+   cadence so active reads as more insistent than a passing hover. */
 .firm-marker--active {
   transform: scale(1.4);
+  fill: var(--warm-paper) !important;
   fill-opacity: 1 !important;
   stroke: var(--deep-ink) !important;
   stroke-width: 2 !important;
-  stroke-opacity: 0.85;
+  stroke-opacity: 1;
   animation: firm-marker-drop 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards,
              firm-dot-pulse 1100ms var(--ease-out-quart) infinite;
 }
 :root[data-theme='dark'] .firm-marker--active {
   stroke: var(--warm-paper) !important;
-  stroke-opacity: 0.9;
+  fill: var(--deep-ink) !important;
+  stroke-opacity: 1;
+}
+:root[data-theme='dark'] .firm-marker--hover {
+  stroke: var(--warm-paper) !important;
+  fill: var(--deep-ink) !important;
 }
 @keyframes firm-dot-pulse {
   0%   { fill-opacity: 1; }
