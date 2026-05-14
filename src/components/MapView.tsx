@@ -14,7 +14,7 @@ import L from 'leaflet';
 import { feature } from 'topojson-client';
 import type { Topology, GeometryObject } from 'topojson-specification';
 import type { Feature, FeatureCollection } from 'geojson';
-import { FIRMS, type Firm } from '../data/firms';
+import { FIRMS, FIRMS_BY_ID, type Firm } from '../data/firms';
 
 /** Countries we have firms in. Polygon clicks outside this set are inert. */
 const COUNTRIES_WITH_FIRMS = new Set(FIRMS.map((f) => f.countryCode));
@@ -23,7 +23,7 @@ import { useReducedMotion } from '../hooks/useReducedMotion';
 import { NUMERIC_TO_ALPHA2 } from '../data/countryCodeMap';
 import { monogram } from '../utils/monogram';
 import { FirmPopup } from './FirmPopup';
-import { animatePopupIn, pulseClick, pulseHover } from '../utils/animations';
+import { animatePopupIn, pulseClick, pulseHover, startBeacon } from '../utils/animations';
 import './MapView.css';
 
 const COUNTRIES_URL = 'https://unpkg.com/world-atlas@2/countries-10m.json';
@@ -406,6 +406,47 @@ function FirmMarkersLayer({
     );
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [focusedFirmId]);
+
+  // Beacon ring on the focused firm dot — slow, looping pulse that radiates
+  // outward from the marker so the active selection reads at a glance. Tears
+  // down and re-attaches on focus / zoom changes (Leaflet remounts CircleMarker
+  // SVG paths across some zoom transitions). Same retry cadence as the popup
+  // opener for cluster-firms that only mount once the zoom reaches CITY_ZOOM.
+  useEffect(() => {
+    if (!focusedFirmId) return;
+    const firm = FIRMS_BY_ID[focusedFirmId];
+    if (!firm) return;
+    const count = roleCounts.get(focusedFirmId) ?? 0;
+    const isMatch = !!hasProfile && !!matchingFirmIds?.has(focusedFirmId);
+    const baseRadius = isMatch
+      ? Math.max(6, Math.min(12, 5 + count))
+      : Math.max(5, Math.min(10, 4 + count));
+
+    let stop: (() => void) | null = null;
+    const tryStart = () => {
+      const m = markerRefs.current[focusedFirmId];
+      const path = (m as unknown as { _path?: SVGPathElement } | null)?._path;
+      if (m && path) {
+        stop = startBeacon(m, baseRadius);
+        return true;
+      }
+      return false;
+    };
+    if (tryStart()) {
+      return () => {
+        stop?.();
+      };
+    }
+    const timers = [120, 320, 620, 980, 1300].map((d) =>
+      window.setTimeout(() => {
+        if (!stop) tryStart();
+      }, d)
+    );
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      stop?.();
+    };
+  }, [focusedFirmId, zoom, roleCounts, matchingFirmIds, hasProfile]);
 
   const showClusters = zoom < CITY_ZOOM;
 

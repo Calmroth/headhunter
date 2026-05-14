@@ -51,6 +51,22 @@ export function App() {
   } | null>(null);
   const [focusedFirmId, setFocusedFirmId] = useState<string | null>(null);
   const [hoveredFirmId, setHoveredFirmId] = useState<string | null>(null);
+  // Tracks which surface produced the current hover. Only firm-rail hovers
+  // (and the focused/clicked firm) drive the Connectors overlay — job-row
+  // hovers still pan the map and highlight the dot, but no longer draw
+  // wiring back to the consultancy. The rule: lines flow consultancies →
+  // roles only.
+  const [hoverSource, setHoverSource] = useState<'firms' | 'jobs' | null>(null);
+  const handleFirmRailHover = (id: string | null) => {
+    setHoveredFirmId(id);
+    setHoverSource(id ? 'firms' : null);
+  };
+  const handleJobRailHover = (id: string | null) => {
+    setHoveredFirmId(id);
+    setHoverSource(id ? 'jobs' : null);
+  };
+  const wiringFirmId =
+    focusedFirmId ?? (hoverSource === 'firms' ? hoveredFirmId : null);
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
   const [openJobId, setOpenJobId] = useState<string | null>(null);
   const [view, setView] = useState<'detail' | 'apply'>('detail');
@@ -515,7 +531,7 @@ export function App() {
         </Suspense>
       </div>
       <KbdLegend open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <Connectors firmId={hoveredFirmId ?? focusedFirmId} />
+      <Connectors firmId={wiringFirmId} />
       <TopBar profile={profile} onRequestSignIn={requestSignIn} onSignOut={signOut} theme={theme} onToggleTheme={toggleTheme} />
 
       <div className="stage">
@@ -529,7 +545,7 @@ export function App() {
           filters={filters}
           onFiltersChange={setFilters}
           filteredFirmIds={filteredFirmIds}
-          onHoverFirm={setHoveredFirmId}
+          onHoverFirm={handleFirmRailHover}
           onSelectFirm={handleSelectFirm}
         />
 
@@ -588,7 +604,7 @@ export function App() {
           onOpenJob={handleOpenJob}
           onClearRegion={clearRegion}
           onClearFirm={() => setFocusedFirmId(null)}
-          onHoverFirm={setHoveredFirmId}
+          onHoverFirm={handleJobRailHover}
         />
       </div>
 

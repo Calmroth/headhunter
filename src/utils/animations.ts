@@ -93,6 +93,68 @@ export function pulseClick(marker: L.CircleMarker, baseRadius: number) {
 }
 
 /**
+ * Persistent beacon ring on a focused CircleMarker. A soft, slowly-pulsing
+ * circle that radiates outward from the dot, fades, and repeats — the visual
+ * cue that "this is the selected firm" without occluding the dot itself.
+ *
+ * Returns a `stop()` function that cancels the loop and removes the ring.
+ * Caller is responsible for invoking `stop()` when the active firm changes
+ * or the marker unmounts.
+ *
+ * No-op (and returns a noop stop) when prefers-reduced-motion is set.
+ */
+export function startBeacon(
+  marker: L.CircleMarker,
+  baseRadius: number
+): () => void {
+  if (prefersReduce()) return () => {};
+
+  const path = (marker as CircleMarkerWithPath)._path;
+  if (!path?.parentNode) return () => {};
+
+  const stroke = path.getAttribute('stroke') ?? '#b8482e';
+  const bbox = path.getBBox();
+  const cx = bbox.x + bbox.width / 2;
+  const cy = bbox.y + bbox.height / 2;
+
+  const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  ring.setAttribute('cx', String(cx));
+  ring.setAttribute('cy', String(cy));
+  ring.setAttribute('r', String(baseRadius));
+  ring.setAttribute('fill', 'none');
+  ring.setAttribute('stroke', stroke);
+  ring.setAttribute('stroke-width', '1.25');
+  ring.setAttribute('pointer-events', 'none');
+  ring.setAttribute('stroke-opacity', '0.55');
+  ring.classList.add('firm-beacon-ring');
+  path.parentNode.appendChild(ring);
+
+  const state = { r: baseRadius, op: 0.55 };
+  const animation = animate(state, {
+    r: baseRadius * 3.4,
+    op: 0,
+    duration: 1500,
+    ease: 'outQuart',
+    loop: true,
+    onUpdate: () => {
+      ring.setAttribute('r', String(state.r));
+      ring.setAttribute('stroke-opacity', String(state.op));
+    },
+  });
+
+  return () => {
+    // anime v4: `pause()` halts the loop, `revert()` restores initial values.
+    // We just want it stopped and the DOM cleaned up.
+    try {
+      (animation as unknown as { pause?: () => void }).pause?.();
+    } catch {
+      /* no-op */
+    }
+    ring.remove();
+  };
+}
+
+/**
  * Popup entry animation. Outer wrapper rises and scales; inner sections
  * stagger in just behind. Tip fades alongside the wrapper.
  *
