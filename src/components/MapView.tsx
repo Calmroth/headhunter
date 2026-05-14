@@ -669,12 +669,23 @@ function FirmMarkersLayer({
             const onAreaClick = () => {
               if (!c.bounds) return;
               onFirmHover(null);
-              // Narrow both rails to this city. Per the map-focus rule, no
-              // fly / zoom — the map stays where the user put it. To explore
-              // the city's dots, the user can wheel-zoom or dblclick out.
+              // Narrow both rails to this city.
               if (onCityClick && c.firms[0]) {
                 onCityClick(c.firms[0].city, c.firms[0].countryCode);
               }
+              // City cluster IS an explicit "go to this city" interaction,
+              // so zoom in to frame the cluster. Single firm-dot clicks and
+              // rail-row hover do NOT move the map (see map-focus rule);
+              // city cluster is the exception. Never zooms OUT — clamps
+              // targetZoom >= currentZoom — and caps at CITY_ZOOM so the
+              // city's dots separate visually.
+              const currentZoom = map.getZoom();
+              const fitZoom = map.getBoundsZoom(c.bounds, false, L.point(80, 80));
+              const targetZoom = Math.max(currentZoom, Math.min(fitZoom, CITY_ZOOM));
+              map.flyTo(c.bounds.getCenter(), targetZoom, {
+                duration: 0.9,
+                easeLinearity: 0.1,
+              });
             };
             return (
               <Fragment key={`cluster-${c.key}`}>
