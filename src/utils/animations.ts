@@ -108,23 +108,25 @@ type BeaconConfig = {
 };
 
 const BEACON_CONFIG: Record<BeaconIntensity, BeaconConfig> = {
-  // Primary: the "this is the selected firm" emphasis. Wide, bright, double-
-  // ringed so there's always a ring expanding while another is fading — the
-  // dot looks like it's actively transmitting.
+  // Primary: the "this is the selected firm" emphasis. One confident ring —
+  // DESIGN.md calls for responsive motion, not choreographed; one expanding
+  // outQuart ring at solid opacity carries the cue without turning the dot
+  // into a radar transmitter.
   primary: {
-    startOpacity: 0.85,
-    scale: 4.2,
-    duration: 1200,
-    strokeWidth: 2,
-    rings: 2,
+    startOpacity: 0.7,
+    scale: 3.4,
+    duration: 1500,
+    strokeWidth: 1.5,
+    rings: 1,
   },
-  // Ambient: the "you are here" cue on home-city dots. Single ring, quieter
-  // opacity, slower cadence so a screenful of them doesn't feel busy.
+  // Ambient: the "you are here" cue on home-city dots. Slower than primary
+  // so a screenful of them doesn't beat against the focused firm's cadence,
+  // and so the eye still reads them as quieter siblings, not peers.
   ambient: {
-    startOpacity: 0.35,
-    scale: 2.8,
-    duration: 2200,
-    strokeWidth: 1.25,
+    startOpacity: 0.3,
+    scale: 2.6,
+    duration: 2600,
+    strokeWidth: 1,
     rings: 1,
   },
 };
@@ -205,38 +207,6 @@ export function startBeacon(
       const timer = window.setTimeout(startRing, delay);
       cleanups.push(() => window.clearTimeout(timer));
     }
-  }
-
-  // Primary beacons also breathe the dot itself: ±15% radius oscillation so
-  // the active firm reads even from across the map.
-  if (intensity === 'primary') {
-    const dotState = { r: baseRadius };
-    const dotAnim = animate(dotState, {
-      r: baseRadius * 1.18,
-      duration: cfg.duration / 2,
-      ease: 'inOutSine',
-      loop: true,
-      alternate: true,
-      onUpdate: () => {
-        try {
-          marker.setRadius(dotState.r);
-        } catch {
-          /* marker may have been removed mid-animation */
-        }
-      },
-    });
-    cleanups.push(() => {
-      try {
-        (dotAnim as unknown as { pause?: () => void }).pause?.();
-      } catch {
-        /* no-op */
-      }
-      try {
-        marker.setRadius(baseRadius);
-      } catch {
-        /* marker gone */
-      }
-    });
   }
 
   return () => {
