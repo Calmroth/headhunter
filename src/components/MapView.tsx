@@ -702,7 +702,15 @@ function FirmMarkersLayer({
                   fillOpacity: allDim ? 0.05 : 0.1,
                   opacity: allDim ? 0.35 : 0.55,
                 }}
-                eventHandlers={{ click: onAreaClick }}
+                eventHandlers={{
+                  click: onAreaClick,
+                  dblclick: (e) => {
+                    // Same protection as firm dots: dblclick on a cluster
+                    // must not bubble to DoubleClickZoomOut.
+                    const oe = (e as L.LeafletMouseEvent).originalEvent;
+                    if (oe) L.DomEvent.stopPropagation(oe);
+                  },
+                }}
               >
                 <Tooltip
                   direction="top"
@@ -801,6 +809,14 @@ function FirmMarkersLayer({
                 const ev = e as L.LeafletMouseEvent;
                 const cp = ev.containerPoint;
                 onFirmClick(f.id, cp ? { x: cp.x, y: cp.y } : undefined);
+              },
+              dblclick: (e) => {
+                // Dblclick on a dot must NOT bubble to the map's
+                // DoubleClickZoomOut handler — a rapid pair of clicks
+                // near a dot would otherwise zoom out. Belt-and-braces
+                // with bubblingMouseEvents={false}.
+                const oe = (e as L.LeafletMouseEvent).originalEvent;
+                if (oe) L.DomEvent.stopPropagation(oe);
               },
               mouseover: (e) => {
                 // Map dot hover is purely local — pulse + (optional) popup
