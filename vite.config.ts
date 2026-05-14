@@ -12,10 +12,28 @@ export default defineConfig({
     cssCodeSplit: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-leaflet': ['leaflet', 'react-leaflet', 'topojson-client'],
-          'vendor-three': ['three'],
+        // Function form (not object) so this works under both rollup (the
+        // Vite 5 default) and rolldown (used by some local Vite installs).
+        // The object form is rollup-only.
+        manualChunks(id) {
+          if (
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-dom/') ||
+            id.includes('/node_modules/scheduler/')
+          ) {
+            return 'vendor-react';
+          }
+          if (
+            id.includes('/node_modules/leaflet/') ||
+            id.includes('/node_modules/react-leaflet/') ||
+            id.includes('/node_modules/@react-leaflet/') ||
+            id.includes('/node_modules/topojson-client/')
+          ) {
+            return 'vendor-leaflet';
+          }
+          if (id.includes('/node_modules/three/')) {
+            return 'vendor-three';
+          }
         },
       },
     },

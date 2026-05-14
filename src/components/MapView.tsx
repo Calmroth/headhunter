@@ -131,6 +131,25 @@ export function MapView({
 }: Props) {
   const [countries, setCountries] = useState<CountryFeature[]>([]);
 
+  // Theme awareness — country fills are tuned for the warm-paper light base;
+  // on a dark base they read as a bright wash. We branch on theme below to
+  // suppress the focused-country fill in dark mode (the stroke already
+  // carries the affordance clearly against dark tiles).
+  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
+    typeof document !== 'undefined' &&
+    document.documentElement.dataset.theme === 'dark'
+      ? 'dark'
+      : 'light'
+  );
+  useEffect(() => {
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent<'light' | 'dark'>).detail;
+      if (detail === 'light' || detail === 'dark') setTheme(detail);
+    };
+    window.addEventListener('themechange', onChange as EventListener);
+    return () => window.removeEventListener('themechange', onChange as EventListener);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     fetch(COUNTRIES_URL)
@@ -224,7 +243,11 @@ export function MapView({
       fillOpacity = 0.05;
     } else if (isFocused) {
       fillColor = CARD_TONE;
-      fillOpacity = 0.18;
+      // Light mode: a soft paper wash inside the focused border. Dark mode:
+      // no fill — the BORDERLINE stroke (opacity 0.85, weight 1.25) is
+      // already strongly visible against the dark tile base and any paper
+      // tint at this scale reads as a glaring highlight.
+      fillOpacity = theme === 'dark' ? 0 : 0.18;
     } else if (dimOthers) {
       // Don't tint dim countries; just let their stroke fade in the
       // strokeOpacity branch above.
@@ -264,7 +287,7 @@ export function MapView({
         {countries.length > 0 && (
           <Pane name="countriesPane" style={{ zIndex: 350 }}>
           <GeoJSON
-            key={`${focusedCountryCode ?? 'none'}-${(matchingCountryIds && [...matchingCountryIds].sort().join(',')) ?? ''}`}
+            key={`${theme}-${focusedCountryCode ?? 'none'}-${(matchingCountryIds && [...matchingCountryIds].sort().join(',')) ?? ''}`}
             pane="countriesPane"
             data={{ type: 'FeatureCollection', features: countries } as FeatureCollection}
             style={(f) => countryStyle(f as CountryFeature)}
@@ -300,7 +323,11 @@ export function MapView({
                   // auto-fade so the hover doesn't accumulate.
                   path.setStyle({
                     fillColor: CARD_TONE,
-                    fillOpacity: isFocused ? 0.055 : 0.035,
+                    // Same logic as the rest-state fill — paper tones at any
+                    // meaningful opacity wash out against the dark tile base.
+                    // Dark mode: stroke-only feedback.
+                    fillOpacity:
+                      theme === 'dark' ? 0 : isFocused ? 0.055 : 0.035,
                     stroke: true,
                     color: BORDERLINE,
                     weight: 1.25,
