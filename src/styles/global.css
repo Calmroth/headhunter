@@ -173,18 +173,20 @@ a {
   min-height: 0;
 }
 
-/* Tablet / narrow desktop: two columns, left rail moves under center stage. */
+/* Tablet landscape (≈iPad landscape): two columns. Firms drops under the map
+   as a roomier strip (was 16rem — too short to read three firms). Jobs
+   keeps the full right rail. */
 @media (max-width: 1199px) {
   .stage {
     grid-template-columns: 1fr var(--rail-w);
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 1fr auto;
   }
   .stage > .firms {
     grid-row: 2;
     grid-column: 1;
     border-right: 0;
     border-top: 1px solid var(--hairline);
-    max-height: 16rem;
+    max-height: 22rem;
   }
   .stage > .center-stage {
     grid-row: 1;
@@ -193,6 +195,54 @@ a {
   .stage > .jobs {
     grid-row: 1 / span 2;
     grid-column: 2;
+  }
+}
+
+/* Tablet portrait (≈iPad portrait, 768–1023 portrait). The right-rail
+   2-column layout above leaves the rail too narrow once viewport drops
+   below 1024 in portrait, so we fall through to the stacked phone-style
+   layout — but with more generous map and firms heights since the device
+   still has real estate. PRODUCT.md principle #1: "The map is the page." */
+@media (max-width: 1023px) and (orientation: portrait) {
+  body {
+    overflow: auto;
+  }
+  .app {
+    height: auto;
+    min-height: 100dvh;
+  }
+  .stage {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  .stage > .center-stage {
+    grid-row: 1;
+    grid-column: 1;
+    max-height: none;
+    min-height: 65vh;
+    height: 65vh;
+  }
+  .stage > .jobs {
+    grid-row: 2;
+    grid-column: 1;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .stage > .firms {
+    grid-row: 3;
+    grid-column: 1;
+    max-height: 28rem;
+    border-right: 0;
+    border-top: 1px solid var(--hairline);
+  }
+  .app > .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+  .connectors {
+    display: none;
   }
 }
 
@@ -245,6 +295,90 @@ a {
      the gesture bar. */
   .app-footer {
     padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Phone landscape: short viewports (≤500px tall) at any width up to
+   1024 wide. The phone stack above collapses to a 60vh map — fine in
+   portrait, useless in landscape where 60vh is ~250px. Split map and
+   jobs side by side; firms drops below the map column so it stays
+   reachable but doesn't steal vertical room. */
+@media (max-width: 1024px) and (orientation: landscape) and (max-height: 500px) {
+  .stage {
+    grid-template-columns: 1fr minmax(18rem, 22rem);
+    grid-template-rows: 1fr auto;
+  }
+  .stage > .center-stage {
+    grid-row: 1;
+    grid-column: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+  }
+  .stage > .jobs {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    border-top: 0;
+    border-left: 1px solid var(--hairline);
+    max-height: none;
+  }
+  .stage > .firms {
+    grid-row: 2;
+    grid-column: 1;
+    max-height: 14rem;
+    border-top: 1px solid var(--hairline);
+  }
+}
+
+/* Horizontal safe-area insets — landscape notched phones extend content
+   into the camera/notch margins without this. Applied to the surfaces
+   that sit edge-to-edge: topbar and footer. */
+@media (max-width: 1023px) {
+  .app > .topbar,
+  .app-footer {
+    padding-left: max(var(--gutter), env(safe-area-inset-left));
+    padding-right: max(var(--gutter), env(safe-area-inset-right));
+  }
+}
+
+/* Touch baseline. Coarse pointers (phones, tablets, hybrid touch laptops)
+   need ≥44×44px hit areas. We bump the smallest interactive elements
+   regardless of viewport width — width-only breakpoints miss touch
+   Chromebooks at 1366px and touch laptops at 1920px. */
+@media (pointer: coarse) {
+  .topbar-share-button {
+    width: 40px;
+    height: 40px;
+  }
+  .topbar-share {
+    padding: 0.3125rem;
+    gap: 0.25rem;
+  }
+  .firm-row {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  .firms-filters-trigger {
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+  .search-clear {
+    padding: 0.5rem 0.625rem;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .account-trigger {
+    padding: 0.375rem 0.75rem 0.375rem 0.375rem;
+  }
+  .account-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  .topbar-share-donate {
+    padding: 0.5rem 0.875rem;
   }
 }
 

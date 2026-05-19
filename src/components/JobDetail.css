@@ -84,13 +84,22 @@
 .job-detail-header-text {
   min-width: 0;
 }
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .job-detail-header {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
   .job-detail-header-emblem {
     max-width: 140px;
+  }
+  .job-detail-back {
+    padding: 0.75rem 1.125rem;
+    margin-bottom: 1.75rem;
+  }
+  .job-detail-meta {
+    gap: 1rem;
+    margin: 1.75rem 0;
+    padding: 1.25rem 0;
   }
 }
 
