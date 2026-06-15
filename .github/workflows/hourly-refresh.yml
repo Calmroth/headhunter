@@ -1,0 +1,72 @@
+name: Hourly jobs refresh + deploy
+
+# True 24/7 background refresh. Runs on GitHub's infrastructure regardless of
+# whether any local machine or Claude session is open. Each run invokes the
+# jobs-refresher procedure, verifies the build, then pushes to main — Vercel's
+# Git Integration auto-deploys the new commit.
+#
+# REQUIRED ONE-TIME SETUP (no secrets are stored in the repo):
+#   gh secret set ANTHROPIC_API_KEY --body "<your-key>"
+# Until that secret exists, the "Refresh jobs" step fails and nothing is pushed.
+
+on:
+  schedule:
+    - cron: '17 * * * *'   # hourly at :17 UTC (off-minute, avoids the :00 stampede)
+  workflow_dispatch: {}     # allow manual runs from the Actions tab
+
+# Allow the job to commit and push back to the repo.
+permissions:
+  contents: write
+
+# Never let two refreshes overlap; let an in-flight run finish.
+concurrency:
+  group: hourly-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Refresh jobs with Claude
+        uses: anthropics/claude-code-base-action@beta
+        with:
+          prompt: |
+            Follow the procedure in .claude/agents/jobs-refresher.md exactly.
+            Refresh src/data/jobs.ts against live careers pages for every firm in
+            src/data/firms.ts: reconcile the JOBS array (add new roles, drop
+            withdrawn ones, refresh stale postedAt), and stamp JOBS_LAST_UPDATED
+            with today's UTC date in YYYY-MM-DD form. Then run `npx tsc --noEmit`
+            and fix any discipline/seniority type errors. Touch only
+            src/data/jobs.ts (and src/data/websites.ts if a careers URL changed).
+          allowed_tools: "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch"
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Verify production build
+        run: npm run build
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name  "headhunter-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/data/jobs.ts src/data/websites.ts
+          if git diff --cached --quiet; then
+            echo "No job changes this run — nothing to deploy."
+          else
+            git commit -m "chore(jobs): hourly auto-refresh [skip ci]"
+            git push origin main
+          fi
