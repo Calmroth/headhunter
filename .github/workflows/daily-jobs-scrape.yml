@@ -1,0 +1,86 @@
+name: Daily jobs scrape + deploy
+
+# Real 24/7 scraping. Runs on GitHub's infrastructure on a daily cron, invokes
+# Claude (Sonnet 4.6) to scrape every firm's careers page and reconcile
+# src/data/jobs.ts, verifies the production build, then pushes to main — Vercel's
+# Git Integration auto-deploys the new commit.
+#
+# REQUIRED ONE-TIME SETUP (no secret is stored in the repo):
+#   Add an ANTHROPIC_API_KEY repository secret. Without it the scrape step
+#   exits 1 and nothing is pushed.
+#   Web UI: repo > Settings > Secrets and variables > Actions > New repository secret
+#   Name: ANTHROPIC_API_KEY   Value: sk-ant-...   (from console.anthropic.com)
+#
+# Note: this consumes Anthropic API credits per run. Cadence is daily by design;
+# careers pages rarely change faster. Dial max_turns / timeout-minutes down to
+# cap cost, or change the cron below.
+
+on:
+  schedule:
+    - cron: '19 6 * * *'   # 06:19 UTC daily (~08:19 Europe/Stockholm summer, 07:19 winter)
+  workflow_dispatch: {}     # allow manual runs from the Actions tab
+
+permissions:
+  contents: write           # allow committing + pushing back to the repo
+
+concurrency:
+  group: jobs-scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30     # hard ceiling so a stuck run can't bill indefinitely
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Scrape jobs with Claude
+        uses: anthropics/claude-code-base-action@beta
+        with:
+          model: claude-sonnet-4-6
+          max_turns: "150"
+          prompt: |
+            Follow the procedure in .claude/agents/jobs-refresher.md exactly.
+            For every firm in src/data/firms.ts, use websiteFor() from
+            src/data/websites.ts to locate the careers page, fetch it, and
+            reconcile src/data/jobs.ts:
+              - ADD newly-posted roles not already in JOBS.
+              - REMOVE roles in JOBS no longer listed — UNLESS that firm's
+                careers page failed to load (non-200), in which case KEEP its
+                existing roles and log a warning.
+              - REFRESH postedAt only when the live date is materially newer.
+            Map every role to the Discipline and Seniority enums in
+            src/data/taxonomy.ts; skip unmappable roles. Stamp JOBS_LAST_UPDATED
+            with today's UTC date (YYYY-MM-DD). Run `npx tsc --noEmit` and fix any
+            type errors. Edit ONLY src/data/jobs.ts and, if a careers URL changed,
+            src/data/websites.ts. Use sub-agents in parallel (one per firm) to
+            stay within the time budget.
+          allowed_tools: "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch,Task"
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Verify production build
+        run: npm run build
+
+      - name: Commit & push if changed
+        run: |
+          git config user.name  "headhunter-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/data/jobs.ts src/data/websites.ts
+          if git diff --cached --quiet; then
+            echo "No job changes this run — nothing to deploy."
+          else
+            git commit -m "chore(jobs): daily scrape refresh"
+            git push origin main
+          fi
