@@ -3,7 +3,7 @@ import type { Discipline, Seniority } from './taxonomy';
 /** ISO date stamped by the jobs-refresher pipeline on each successful run.
  *  Surfaced in the app footer so users can see how fresh the listings are.
  *  Rewritten in-place by the refresh script; do not edit by hand. */
-export const JOBS_LAST_UPDATED = '2026-06-15';
+export const JOBS_LAST_UPDATED = '2026-06-22';
 
 export type Job = {
   id: string;
@@ -28,140 +28,190 @@ const hoursAgo = (n: number) => {
 };
 
 export const JOBS: Job[] = [
-  // Stockholm
-  { id: 'j-1', firmId: 'north-kingdom', title: 'Senior 3D Artist', discipline: '3D Artist', seniority: 'Senior', postedAt: hoursAgo(2), agentFound: true },
-  { id: 'j-2', firmId: 'north-kingdom', title: 'Art Director, Brand Films', discipline: 'Art Director', seniority: 'Mid', postedAt: daysAgo(1) },
-  { id: 'j-3', firmId: 'acne', title: 'Visual Designer', discipline: 'Visual Designer', seniority: 'Mid', postedAt: daysAgo(2) },
-  { id: 'j-4', firmId: 'snask', title: 'Lead Brand Designer', discipline: 'Brand Designer', seniority: 'Lead', postedAt: daysAgo(3) },
-  { id: 'j-5', firmId: 'bvd', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-6', firmId: 'kurppa-hosk', title: 'Motion Designer', discipline: 'Motion Designer', seniority: 'Mid', postedAt: daysAgo(7) },
-  { id: 'j-7', firmId: 'goodbye-kansas', title: 'CG Generalist, Film', discipline: 'CG Generalist', seniority: 'Senior', postedAt: hoursAgo(6), agentFound: true },
-  { id: 'j-8', firmId: 'goodbye-kansas', title: 'Concept Artist', discipline: 'Concept Artist', seniority: 'Mid', postedAt: daysAgo(4) },
+  // Kept from previous run — careers page unreachable on 2026-06-22
+  { id: 'j-4',  firmId: 'snask',               title: 'Lead Brand Designer',    discipline: 'Brand Designer',  seniority: 'Lead',   postedAt: daysAgo(3) },
+  { id: 'j-11', firmId: 'kurppa',              title: 'Art Director',            discipline: 'Art Director',    seniority: 'Senior', postedAt: daysAgo(5) },
+  { id: 'j-14', firmId: 'heydays',             title: 'Brand Designer',          discipline: 'Brand Designer',  seniority: 'Mid',    postedAt: daysAgo(6) },
+  { id: 'j-15', firmId: 'e-types',             title: 'Type Designer',           discipline: 'Type Designer',   seniority: 'Senior', postedAt: daysAgo(3) },
+  { id: 'j-32', firmId: 'la-tigre',            title: 'Visual Designer',         discipline: 'Visual Designer', seniority: 'Mid',    postedAt: daysAgo(4) },
+  { id: 'j-84', firmId: 'ey-doberman-stockholm', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: hoursAgo(6), agentFound: true },
+  { id: 'j-85', firmId: 'ey-doberman-newyork', title: 'Senior UX Designer',      discipline: 'UX Designer',     seniority: 'Senior', postedAt: daysAgo(4) },
 
-  // Helsinki
-  { id: 'j-9', firmId: 'bond', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-10', firmId: 'bond', title: 'Brand Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(8) },
-  { id: 'j-11', firmId: 'kurppa', title: 'Art Director', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(5) },
+  // Stockholm — North Kingdom (northkingdom.teamtailor.com)
+  { id: 'north-kingdom-designer', firmId: 'north-kingdom', title: 'Designer', discipline: 'Visual Designer', seniority: 'Mid', postedAt: '2026-06-22' },
 
-  // Oslo
-  { id: 'j-12', firmId: 'bakken-baeck', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(1) },
-  { id: 'j-13', firmId: 'bakken-baeck', title: 'Motion Designer', discipline: 'Motion Designer', seniority: 'Mid', postedAt: daysAgo(4) },
-  { id: 'j-14', firmId: 'heydays', title: 'Brand Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(6) },
+  // Stockholm — ACNE Studios (jobylon / Business of Fashion)
+  { id: 'acne-senior-mens-wear-designer', firmId: 'acne', title: 'Senior Mens Wear Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'acne-ecommerce-designer',        firmId: 'acne', title: 'E-Commerce Designer',        discipline: 'UI Designer',     seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'acne-junior-digital-designer',   firmId: 'acne', title: 'Junior Digital Designer',    discipline: 'UI Designer',     seniority: 'Junior', postedAt: '2026-06-22' },
 
-  // Copenhagen
-  { id: 'j-15', firmId: 'e-types', title: 'Type Designer', discipline: 'Type Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-16', firmId: 'kontrapunkt', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(9) },
+  // Stockholm — BVD (bvd.se/we-are-hiring)
+  { id: 'bvd-3d-motion-designer', firmId: 'bvd', title: '3D & Motion Designer', discipline: 'Motion Designer', seniority: 'Mid', postedAt: '2026-06-22' },
+  { id: 'bvd-motion-designer',    firmId: 'bvd', title: 'Motion Designer',       discipline: 'Motion Designer', seniority: 'Mid', postedAt: '2026-06-22' },
 
-  // London
-  { id: 'j-17', firmId: 'pentagram', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: hoursAgo(10), agentFound: true },
-  { id: 'j-18', firmId: 'pentagram', title: 'Mid Visual Designer', discipline: 'Visual Designer', seniority: 'Mid', postedAt: daysAgo(2) },
-  { id: 'j-19', firmId: 'wolff-olins', title: 'Creative Director', discipline: 'Creative Director', seniority: 'Head of', postedAt: daysAgo(11) },
-  { id: 'j-20', firmId: 'wolff-olins', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-21', firmId: 'dn-co', title: 'Brand Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(7) },
-  { id: 'j-22', firmId: 'moving-brands', title: 'Lead UX Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(3) },
-  { id: 'j-23', firmId: 'the-mill', title: 'Senior 3D Artist', discipline: '3D Artist', seniority: 'Senior', postedAt: daysAgo(1) },
-  { id: 'j-24', firmId: 'the-mill', title: 'CG Lead, Commercials', discipline: 'CG Generalist', seniority: 'Lead', postedAt: daysAgo(8) },
-  { id: 'j-25', firmId: 'mpc', title: 'Concept Artist', discipline: 'Concept Artist', seniority: 'Senior', postedAt: daysAgo(2) },
+  // Stockholm — Goodbye Kansas (career.goodbyekansas.com)
+  { id: 'goodbye-kansas-concept-artist-intern', firmId: 'goodbye-kansas', title: 'Concept Artist Intern', discipline: 'Concept Artist', seniority: 'Junior', postedAt: '2025-10-01' },
 
-  // Germany
-  { id: 'j-26', firmId: 'bureau-borsche', title: 'Art Director', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-27', firmId: 'mutabor', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-28', firmId: 'edenspiekermann', title: 'Lead UX Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(10) },
-  { id: 'j-29', firmId: 'hort', title: 'Junior Visual Designer', discipline: 'Visual Designer', seniority: 'Junior', postedAt: daysAgo(6) },
+  // Helsinki — Bond (thisisbond.com/job-application/freelancer)
+  { id: 'bond-freelancer', firmId: 'bond', title: 'Freelancer (Brand Designer)', discipline: 'Brand Designer', seniority: 'Mid', postedAt: '2026-06-22' },
 
-  // Netherlands
-  { id: 'j-30', firmId: 'studio-dumbar', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-31', firmId: 'random-studio', title: 'Creative Technologist', discipline: 'Motion Designer', seniority: 'Senior', postedAt: hoursAgo(20), agentFound: true },
+  // Oslo — Bakken & Bæck (bakkenbaeck.teamtailor.com)
+  { id: 'bakken-baeck-senior-brand-designer', firmId: 'bakken-baeck', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'bakken-baeck-lead-product-designer', firmId: 'bakken-baeck', title: 'Lead Product Designer',  discipline: 'UI Designer',    seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'bakken-baeck-digital-design-lead',   firmId: 'bakken-baeck', title: 'Digital Design Lead',    discipline: 'UI Designer',    seniority: 'Lead',   postedAt: '2026-06-22' },
 
-  // Italy
-  { id: 'j-32', firmId: 'la-tigre', title: 'Visual Designer', discipline: 'Visual Designer', seniority: 'Mid', postedAt: daysAgo(4) },
+  // Copenhagen — Kontrapunkt (app.elvium.com/en/positions/30934)
+  { id: 'kontrapunkt-concept-designer', firmId: 'kontrapunkt', title: 'Concept Designer', discipline: 'Visual Designer', seniority: 'Mid', postedAt: '2026-06-22' },
 
-  // United States
-  { id: 'j-33', firmId: 'collins', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(1) },
-  { id: 'j-34', firmId: 'collins', title: 'Art Director', discipline: 'Art Director', seniority: 'Senior', postedAt: hoursAgo(14), agentFound: true },
-  { id: 'j-35', firmId: 'mother-design', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-36', firmId: 'gretel', title: 'Motion Designer', discipline: 'Motion Designer', seniority: 'Mid', postedAt: daysAgo(6) },
-  { id: 'j-37', firmId: 'instrument', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-38', firmId: 'instrument', title: 'Lead 3D Artist', discipline: '3D Artist', seniority: 'Lead', postedAt: daysAgo(5) },
-  { id: 'j-39', firmId: 'manual', title: 'Brand Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(8) },
-  { id: 'j-40', firmId: 'character-sf', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(4) },
+  // London — Pentagram (pentagram.com/careers, via BP&O / ifyoucouldjobs, Jan 2026)
+  { id: 'pentagram-mid-weight-designer', firmId: 'pentagram', title: 'Mid-weight Designer', discipline: 'Visual Designer', seniority: 'Mid', postedAt: '2026-01-01' },
 
-  // Canada
-  { id: 'j-41', firmId: 'metalab', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-42', firmId: 'sid-lee', title: 'Art Director', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(7) },
+  // London — Wolff Olins (wolffolins.com/jobs)
+  { id: 'wolff-olins-design-director',   firmId: 'wolff-olins', title: 'Design Director',  discipline: 'Art Director',      seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'wolff-olins-creative-director', firmId: 'wolff-olins', title: 'Creative Director', discipline: 'Creative Director', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'wolff-olins-senior-designer',   firmId: 'wolff-olins', title: 'Senior Designer',   discipline: 'Visual Designer',   seniority: 'Senior', postedAt: '2026-06-22' },
 
-  // Australia
-  { id: 'j-43', firmId: 'method', title: 'Lead Visual Designer', discipline: 'Visual Designer', seniority: 'Lead', postedAt: daysAgo(2) },
-  { id: 'j-44', firmId: 'for-the-people', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(5) },
+  // London — DN&Co (dnco.com/jobs)
+  { id: 'dn-co-senior-brand-motion-designer', firmId: 'dn-co', title: 'Senior Brand and Motion Designer', discipline: 'Motion Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'dn-co-design-director',              firmId: 'dn-co', title: 'Design Director',                  discipline: 'Art Director',    seniority: 'Lead',   postedAt: '2026-06-22' },
 
-  // Iceland, Switzerland
-  { id: 'j-45', firmId: 'ueno', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(6) },
-  { id: 'j-46', firmId: 'frontify-creative', title: 'Brand Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(3) },
+  // London — Moving Brands (apply.workable.com/movingbrands)
+  { id: 'moving-brands-designer', firmId: 'moving-brands', title: 'Designer', discipline: 'Visual Designer', seniority: 'Mid', postedAt: '2026-06-22' },
+
+  // Hamburg — Mutabor (mutabor.jobs.personio.de)
+  { id: 'mutabor-junior-art-director-digital',  firmId: 'mutabor', title: '(Junior) Art Director Digital',         discipline: 'Art Director', seniority: 'Junior', postedAt: '2026-06-22' },
+  { id: 'mutabor-senior-art-director-digital',  firmId: 'mutabor', title: '(Senior) Art Director Digital',         discipline: 'Art Director', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'mutabor-art-director-design',          firmId: 'mutabor', title: 'Art Director Design',                   discipline: 'Art Director', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'mutabor-art-director-interior-retail', firmId: 'mutabor', title: 'Art Director Interior Design / Retail', discipline: 'Art Director', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'mutabor-ux-designer',                  firmId: 'mutabor', title: 'UX Designer',                          discipline: 'UX Designer',  seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'mutabor-junior-ux-designer',           firmId: 'mutabor', title: 'Junior UX Designer',                   discipline: 'UX Designer',  seniority: 'Junior', postedAt: '2026-06-22' },
+
+  // Berlin — Edenspiekermann (edenspiekermann.com/jobs)
+  { id: 'edenspiekermann-design-director',       firmId: 'edenspiekermann', title: 'Design Director',       discipline: 'Art Director',    seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'edenspiekermann-senior-designer',       firmId: 'edenspiekermann', title: 'Senior Designer',       discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'edenspiekermann-senior-ui-ux-designer', firmId: 'edenspiekermann', title: 'Senior UI/UX Designer', discipline: 'UX Designer',     seniority: 'Senior', postedAt: '2026-06-22' },
+
+  // Amsterdam — Random Studio (jobs.random.studio)
+  { id: 'random-studio-ux-lead',                firmId: 'random-studio', title: 'UX Lead',               discipline: 'UX Designer',      seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'random-studio-creative-lead',           firmId: 'random-studio', title: 'Creative Lead',          discipline: 'Creative Director', seniority: 'Lead',  postedAt: '2026-06-22' },
+  { id: 'random-studio-medior-graphic-designer', firmId: 'random-studio', title: 'Medior Graphic Designer', discipline: 'Visual Designer',  seniority: 'Mid',   postedAt: '2026-06-22' },
+  { id: 'random-studio-senior-spatial-designer', firmId: 'random-studio', title: 'Senior Spatial Designer', discipline: '3D Artist',        seniority: 'Senior', postedAt: '2026-06-22' },
+
+  // New York — Collins (wearecollins.com/jobs)
+  { id: 'collins-senior-designer', firmId: 'collins', title: 'Senior Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+
+  // London — Mother Design (ifyoucouldjobs.com)
+  { id: 'mother-design-creative-director',        firmId: 'mother-design', title: 'Creative Director',      discipline: 'Creative Director', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'mother-design-senior-branding-designer', firmId: 'mother-design', title: 'Senior Branding Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+
+  // New York — Gretel (gretelny.com)
+  { id: 'gretel-senior-designer',    firmId: 'gretel', title: 'Senior Designer',    discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'gretel-mid-level-designer', firmId: 'gretel', title: 'Mid Level Designer', discipline: 'Visual Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+
+  // Portland — Instrument (instrument.com/careers)
+  { id: 'instrument-creative-director',           firmId: 'instrument', title: 'Creative Director',           discipline: 'Creative Director', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'instrument-associate-creative-director', firmId: 'instrument', title: 'Associate Creative Director', discipline: 'Creative Director', seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'instrument-senior-designer',             firmId: 'instrument', title: 'Senior Designer',             discipline: 'Visual Designer',   seniority: 'Senior', postedAt: '2026-06-22' },
+
+  // Victoria, Canada — MetaLab (job-boards.greenhouse.io/metalab)
+  { id: 'metalab-ai-native-sr-product-designer', firmId: 'metalab', title: 'AI Native Sr. Product Designer',    discipline: 'UX Designer',    seniority: 'Senior',    postedAt: '2026-06-22' },
+  { id: 'metalab-product-designer',              firmId: 'metalab', title: 'Product Designer',                  discipline: 'UX Designer',    seniority: 'Mid',       postedAt: '2026-06-22' },
+  { id: 'metalab-senior-product-designer',       firmId: 'metalab', title: 'Senior Product Designer',           discipline: 'UX Designer',    seniority: 'Senior',    postedAt: '2026-06-22' },
+  { id: 'metalab-principal-product-designer',    firmId: 'metalab', title: 'Principal Product Designer',        discipline: 'UX Designer',    seniority: 'Principal', postedAt: '2026-06-22' },
+  { id: 'metalab-brand-designer',                firmId: 'metalab', title: 'Brand Designer',                    discipline: 'Brand Designer', seniority: 'Mid',       postedAt: '2026-06-22' },
+  { id: 'metalab-senior-brand-designer',         firmId: 'metalab', title: 'Senior Brand Designer (Marketing)', discipline: 'Brand Designer', seniority: 'Senior',    postedAt: '2026-06-22' },
+  { id: 'metalab-brand-director',                firmId: 'metalab', title: 'Brand Director',                    discipline: 'Brand Designer', seniority: 'Head of',   postedAt: '2026-06-22' },
+  { id: 'metalab-principal-brand-designer',      firmId: 'metalab', title: 'Principal Brand Designer',          discipline: 'Brand Designer', seniority: 'Principal', postedAt: '2026-06-22' },
+
+  // Montreal — Sid Lee (sidlee.com/en/careers/job-listing)
+  { id: 'sid-lee-senior-art-director',     firmId: 'sid-lee', title: 'Senior Art Director',                   discipline: 'Art Director', seniority: 'Senior', postedAt: '2026-04-27' },
+  { id: 'sid-lee-art-director',            firmId: 'sid-lee', title: 'Art Director',                          discipline: 'Art Director', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'sid-lee-creative-team-ad',        firmId: 'sid-lee', title: 'Creative Team (Art Director)',           discipline: 'Art Director', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'sid-lee-senior-creative-team-ad', firmId: 'sid-lee', title: 'Senior Creative Team (Art Director)',    discipline: 'Art Director', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'sid-lee-senior-ad-mat-leave',     firmId: 'sid-lee', title: 'Senior Art Director (Mat Leave Contract)', discipline: 'Art Director', seniority: 'Senior', postedAt: '2026-06-22' },
+
+  // Sydney — For The People (forthepeople.agency)
+  { id: 'for-the-people-design-director', firmId: 'for-the-people', title: 'Design Director', discipline: 'Creative Director', seniority: 'Lead', postedAt: '2026-06-22' },
+
+  // Zürich — Frontify Studio (builtin.com/company/frontify)
+  { id: 'frontify-creative-principal-pd-ds',  firmId: 'frontify-creative', title: 'Principal Product Designer – Design Systems', discipline: 'UX Designer', seniority: 'Principal', postedAt: '2026-06-22' },
+  { id: 'frontify-creative-senior-pd',        firmId: 'frontify-creative', title: 'Senior Product Designer',                     discipline: 'UX Designer', seniority: 'Senior',    postedAt: '2026-06-22' },
+  { id: 'frontify-creative-principal-pd-dam', firmId: 'frontify-creative', title: 'Principal Product Designer – DAM',             discipline: 'UX Designer', seniority: 'Principal', postedAt: '2026-06-22' },
 
   // Engineering & IT consultancies (Band C)
-  { id: 'j-47', firmId: 'afry-stockholm', title: 'Senior Industrial Designer', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-48', firmId: 'afry-stockholm', title: 'UX Designer, Industry Digital', discipline: 'UX Designer', seniority: 'Mid', postedAt: hoursAgo(18), agentFound: true },
-  { id: 'j-49', firmId: 'afry-gothenburg', title: 'Senior 3D Visualisation Artist', discipline: '3D Artist', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-50', firmId: 'nexer-gothenburg', title: 'Lead Experience Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(1) },
-  { id: 'j-51', firmId: 'nexer-stockholm', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-52', firmId: 'knowit-stockholm', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-53', firmId: 'knowit-stockholm', title: 'Art Director, Brand Practice', discipline: 'Art Director', seniority: 'Senior', postedAt: hoursAgo(8), agentFound: true },
-  { id: 'j-54', firmId: 'knowit-oslo', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(6) },
-  { id: 'j-55', firmId: 'knowit-helsinki', title: 'Brand Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(2) },
-  { id: 'j-56', firmId: 'tietoevry-helsinki', title: 'Senior Service Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-57', firmId: 'tietoevry-stockholm', title: 'Lead UI Designer', discipline: 'UI Designer', seniority: 'Lead', postedAt: daysAgo(8) },
-  { id: 'j-58', firmId: 'visma-oslo', title: 'Senior Product Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-59', firmId: 'cognizant-london', title: 'Creative Director, Digital Practice', discipline: 'Creative Director', seniority: 'Head of', postedAt: daysAgo(7) },
-  { id: 'j-60', firmId: 'cognizant-newyork', title: 'Senior 3D Artist, Immersive', discipline: '3D Artist', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-61', firmId: 'tcs-interactive-london', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-62', firmId: 'infosys-wongdoody-london', title: 'Art Director', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(4) },
+  { id: 'afry-stockholm-ux-ui-designer',              firmId: 'afry-stockholm',          title: 'UX/UI Designer',         discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'afry-gothenburg-ux-ui-designer',             firmId: 'afry-gothenburg',         title: 'UX/UI Designer',         discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'nexer-gothenburg-service-designer',          firmId: 'nexer-gothenburg',        title: 'Service Designer',       discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'nexer-stockholm-ux-designer',                firmId: 'nexer-stockholm',         title: 'UX Designer',            discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'knowit-stockholm-ux-designer',               firmId: 'knowit-stockholm',        title: 'UX Designer',            discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'knowit-oslo-ux-designer',                    firmId: 'knowit-oslo',             title: 'UX Designer',            discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'tietoevry-stockholm-senior-ux-ui-designer',  firmId: 'tietoevry-stockholm',     title: 'Senior UX/UI Designer',  discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'tietoevry-stockholm-ux-ui-designer',         firmId: 'tietoevry-stockholm',     title: 'UX/UI Designer',         discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'cognizant-newyork-digital-product-designer', firmId: 'cognizant-newyork',       title: 'Digital Product Designer', discipline: 'UI Designer', seniority: 'Mid',  postedAt: '2026-06-08' },
+  { id: 'cognizant-newyork-ux-designer',              firmId: 'cognizant-newyork',       title: 'UX Designer',            discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'cognizant-newyork-senior-ux-ui-designer',    firmId: 'cognizant-newyork',       title: 'Senior UX/UI Designer',  discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'cognizant-newyork-lead-ux-designer',         firmId: 'cognizant-newyork',       title: 'Lead UX Designer',       discipline: 'UX Designer', seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'infosys-wongdoody-london-ux-director',       firmId: 'infosys-wongdoody-london', title: 'UX Director',            discipline: 'UX Designer', seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'infosys-wongdoody-london-ux-lead',           firmId: 'infosys-wongdoody-london', title: 'UX Lead',                discipline: 'UX Designer', seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'infosys-wongdoody-london-cd-visual',         firmId: 'infosys-wongdoody-london', title: 'Creative Director – Visual Design', discipline: 'Creative Director', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'infosys-wongdoody-london-senior-ux',         firmId: 'infosys-wongdoody-london', title: 'Senior UX Designer',     discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'infosys-wongdoody-london-product-designer',  firmId: 'infosys-wongdoody-london', title: 'Product Designer',       discipline: 'UI Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
 
   // Global enterprise consultancies (Band B)
-  { id: 'j-63', firmId: 'accenture-song-london', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: hoursAgo(4), agentFound: true },
-  { id: 'j-64', firmId: 'accenture-song-london', title: 'Lead 3D Artist', discipline: '3D Artist', seniority: 'Lead', postedAt: daysAgo(2) },
-  { id: 'j-65', firmId: 'accenture-song-dublin', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-66', firmId: 'accenture-song-stockholm', title: 'Senior Art Director', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(1) },
-  { id: 'j-67', firmId: 'deloitte-digital-newyork', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-68', firmId: 'deloitte-digital-london', title: 'Lead UX Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(6) },
-  { id: 'j-69', firmId: 'deloitte-digital-stockholm', title: 'Senior Motion Designer', discipline: 'Motion Designer', seniority: 'Senior', postedAt: hoursAgo(12), agentFound: true },
-  { id: 'j-70', firmId: 'ideo-sanfrancisco', title: 'Senior Industrial Designer', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-71', firmId: 'ideo-london', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-72', firmId: 'ideo-tokyo', title: 'Lead Designer, Industrial', discipline: 'Industrial Designer', seniority: 'Lead', postedAt: daysAgo(9) },
-  { id: 'j-73', firmId: 'mckinsey-design-newyork', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-74', firmId: 'mckinsey-design-stockholm', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-75', firmId: 'designit-copenhagen', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-76', firmId: 'designit-london', title: 'Lead Visual Designer', discipline: 'Visual Designer', seniority: 'Lead', postedAt: daysAgo(6) },
-  { id: 'j-77', firmId: 'designit-munich', title: 'Senior Industrial Designer', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-78', firmId: 'frog-sanfrancisco', title: 'Senior 3D Artist', discipline: '3D Artist', seniority: 'Senior', postedAt: daysAgo(1) },
-  { id: 'j-79', firmId: 'frog-london', title: 'Lead UX Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(4) },
-  { id: 'j-80', firmId: 'frog-munich', title: 'Senior Industrial Designer', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: daysAgo(7) },
-  { id: 'j-81', firmId: 'ibm-ix-newyork', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-82', firmId: 'publicis-sapient-newyork', title: 'Senior Art Director', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-83', firmId: 'publicis-sapient-london', title: 'Lead Brand Designer', discipline: 'Brand Designer', seniority: 'Lead', postedAt: daysAgo(6) },
-  { id: 'j-84', firmId: 'ey-doberman-stockholm', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: hoursAgo(6), agentFound: true },
-  { id: 'j-85', firmId: 'ey-doberman-newyork', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-86', firmId: 'capgemini-invent-paris', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-87', firmId: 'sopra-steria-paris', title: 'Art Director, Digital', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(5) },
+  { id: 'accenture-song-london-senior-art-director',  firmId: 'accenture-song-london',    title: 'Droga5 Senior Art Director', discipline: 'Art Director',    seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'accenture-song-london-senior-designer',      firmId: 'accenture-song-london',    title: 'Droga5 Senior Designer',     discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'accenture-song-dublin-senior-art-director',  firmId: 'accenture-song-dublin',    title: 'Droga5 Senior Art Director', discipline: 'Art Director',    seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'accenture-song-dublin-acd-art',              firmId: 'accenture-song-dublin',    title: 'Life Sciences Associate Creative Director – Art Direction', discipline: 'Creative Director', seniority: 'Mid', postedAt: '2026-06-22' },
+  { id: 'accenture-song-stockholm-visual-design-mgr', firmId: 'accenture-song-stockholm', title: 'Visual Design Associate Manager', discipline: 'Visual Designer', seniority: 'Lead', postedAt: '2026-06-22' },
+  { id: 'deloitte-digital-newyork-lead-ux-product',   firmId: 'deloitte-digital-newyork', title: 'Lead UX Product Designer',          discipline: 'UX Designer',     seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'deloitte-digital-newyork-lead-ux-visual',    firmId: 'deloitte-digital-newyork', title: 'Lead UX Visual Designer',           discipline: 'Visual Designer', seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'deloitte-digital-newyork-lead-ux-agentic',   firmId: 'deloitte-digital-newyork', title: 'Lead UX Designer – Agentic AI Platform', discipline: 'UX Designer', seniority: 'Lead', postedAt: '2026-06-22' },
+  { id: 'deloitte-digital-newyork-manager-ux',        firmId: 'deloitte-digital-newyork', title: 'Manager, UX Product Design',         discipline: 'UX Designer',     seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'deloitte-digital-london-lead-ux-product',    firmId: 'deloitte-digital-london',  title: 'Lead UX Product Designer',           discipline: 'UX Designer',     seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'deloitte-digital-london-lead-ux-visual',     firmId: 'deloitte-digital-london',  title: 'Lead UX Visual Designer',            discipline: 'Visual Designer', seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'ideo-sf-sr-visual-comm-designer',            firmId: 'ideo-sanfrancisco', title: 'Senior Visual Communication Designer', discipline: 'Visual Designer',    seniority: 'Senior', postedAt: '2026-02-01' },
+  { id: 'ideo-sf-design-research-lead',               firmId: 'ideo-sanfrancisco', title: 'Design Research Lead',                discipline: 'UX Designer',        seniority: 'Lead',   postedAt: '2026-02-01' },
+  { id: 'ideo-sf-software-design-director',           firmId: 'ideo-sanfrancisco', title: 'Software Design Director',            discipline: 'Creative Director',  seniority: 'Senior', postedAt: '2026-02-01' },
+  { id: 'ideo-sf-senior-industrial-designer',         firmId: 'ideo-sanfrancisco', title: 'Senior Industrial Designer',          discipline: 'Industrial Designer', seniority: 'Senior', postedAt: '2026-02-01' },
+  { id: 'mckinsey-design-newyork-design-director',    firmId: 'mckinsey-design-newyork', title: 'Design Director – McKinsey Design',          discipline: 'Creative Director', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'mckinsey-design-newyork-assoc-design-dir',   firmId: 'mckinsey-design-newyork', title: 'Associate Design Director – McKinsey Design', discipline: 'Art Director',      seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'designit-london-sr-exp-designer-fintech',    firmId: 'designit-london', title: 'Senior Experience Designer – Fintech', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'designit-london-sr-experience-designer',     firmId: 'designit-london', title: 'Sr. Experience Designer',              discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'designit-munich-ux-ui-designer-mid',         firmId: 'designit-munich', title: 'UX/UI Designer (Mid level)',            discipline: 'UX Designer', seniority: 'Mid',       postedAt: '2026-06-22' },
+  { id: 'designit-munich-experience-designer',        firmId: 'designit-munich', title: 'Experience Designer',                   discipline: 'UX Designer', seniority: 'Mid',       postedAt: '2026-06-22' },
+  { id: 'designit-munich-ux-product-designer',        firmId: 'designit-munich', title: 'UX Product Designer',                   discipline: 'UX Designer', seniority: 'Mid',       postedAt: '2026-06-22' },
+  { id: 'designit-munich-principal-ux-designer',      firmId: 'designit-munich', title: 'Principal UX Designer',                 discipline: 'UX Designer', seniority: 'Principal', postedAt: '2026-06-22' },
+  { id: 'frog-sf-senior-visual-designer',             firmId: 'frog-sanfrancisco', title: 'Senior Visual Designer',  discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'frog-sf-lead-product-designer',              firmId: 'frog-sanfrancisco', title: 'Lead Product Designer',   discipline: 'UX Designer',     seniority: 'Lead',   postedAt: '2026-06-22' },
+  { id: 'frog-sf-senior-product-designer',            firmId: 'frog-sanfrancisco', title: 'Senior Product Designer', discipline: 'UX Designer',     seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'frog-london-senior-ux-designer',             firmId: 'frog-london', title: 'Senior UX Designer',    discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'frog-london-experience-designer',            firmId: 'frog-london', title: 'Experience Designer II', discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'frog-munich-senior-service-designer',        firmId: 'frog-munich', title: 'Senior Service Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'ibm-ix-newyork-innovation-designer',         firmId: 'ibm-ix-newyork', title: 'Innovation Designer', discipline: 'UX Designer', seniority: 'Junior', postedAt: '2026-06-22' },
+  { id: 'publicis-sapient-newyork-cd-ux',             firmId: 'publicis-sapient-newyork', title: 'Creative Director – Experience Design (UX)',    discipline: 'Creative Director', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'publicis-sapient-newyork-acd',               firmId: 'publicis-sapient-newyork', title: 'Associate Creative Director – Experience Design', discipline: 'Art Director', seniority: 'Mid', postedAt: '2026-06-22' },
+  { id: 'publicis-sapient-london-senior-ux',          firmId: 'publicis-sapient-london', title: 'Senior UX Designer',               discipline: 'UX Designer',     seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'publicis-sapient-london-ux-ui-visual',       firmId: 'publicis-sapient-london', title: 'UX/UI Visual Design Working Student', discipline: 'Visual Designer', seniority: 'Junior', postedAt: '2026-06-22' },
+  { id: 'sopra-steria-paris-ux-ui-designer',          firmId: 'sopra-steria-paris', title: 'UX/UI Designer Confirmé/e', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-22' },
 
-  // Cinode customer roster — sample of plausible creative openings
-  { id: 'j-88', firmId: 'rejlers', title: 'Industrial Designer, Energy', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-89', firmId: 'consid', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: hoursAgo(20), agentFound: true },
-  { id: 'j-90', firmId: 'hiq', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-91', firmId: 'hiq', title: 'Art Director, Brand Practice', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-92', firmId: 'vincit', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-93', firmId: 'twoday', title: 'Lead Visual Designer', discipline: 'Visual Designer', seniority: 'Lead', postedAt: daysAgo(1) },
-  { id: 'j-94', firmId: 'nitor', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(6) },
-  { id: 'j-95', firmId: 'knightec', title: 'Senior Industrial Designer', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: hoursAgo(11), agentFound: true },
-  { id: 'j-96', firmId: 'prevas', title: 'Industrial Designer, Embedded', discipline: 'Industrial Designer', seniority: 'Mid', postedAt: daysAgo(7) },
-  { id: 'j-97', firmId: 'b3', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-98', firmId: 'omegapoint', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-99', firmId: 'forefront', title: 'Lead UX Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(2) },
-  { id: 'j-100', firmId: 'centigo', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(6) },
-  { id: 'j-101', firmId: 'bybrick', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: hoursAgo(7), agentFound: true },
-  { id: 'j-102', firmId: 'tretton37', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-103', firmId: 'plantvision', title: 'Industrial Designer, Pharma', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: daysAgo(9) },
-  { id: 'j-104', firmId: 'advania-reykjavik', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-105', firmId: 'softhouse', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-106', firmId: 'silo-ai', title: 'Visual Designer, ML Tooling', discipline: 'Visual Designer', seniority: 'Mid', postedAt: daysAgo(3) },
-  { id: 'j-107', firmId: 'itm8', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(6) },
+  // Cinode customer roster — live listings as of 2026-06-22
+  { id: 'consid-senior-ux-writer',              firmId: 'consid',    title: 'Senior UX-writer / Content Designer',  discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'consid-ux-designer',                   firmId: 'consid',    title: 'UX Designer',                          discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'hiq-ux-designer',                      firmId: 'hiq',       title: 'UX Designer',                          discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'hiq-ui-designer',                      firmId: 'hiq',       title: 'UI Designer',                          discipline: 'UI Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'telia-ux-ui-designer',                 firmId: 'telia',     title: 'UX/UI Designer',                       discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'telia-ux-designer',                    firmId: 'telia',     title: 'UX Designer',                          discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'telia-senior-ux-designer',             firmId: 'telia',     title: 'Senior UX Designer',                   discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'knightec-ux-ui-designer',              firmId: 'knightec',  title: 'UX/UI Designer',                       discipline: 'UI Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'knightec-service-designer',            firmId: 'knightec',  title: 'Service Designer',                     discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'knightec-senior-interaction-designer', firmId: 'knightec',  title: 'Senior Interaction Designer',          discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'prevas-ux-designer',                   firmId: 'prevas',    title: 'UX Designer',                          discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'hm-art-director',                      firmId: 'hm',        title: 'Art Director',                         discipline: 'Art Director', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'hm-ux-ui-designer',                    firmId: 'hm',        title: 'UX/UI Designer',                       discipline: 'UI Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'hm-digital-experience-designer',       firmId: 'hm',        title: 'Digital Experience Designer',          discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'hm-design-system-lead',                firmId: 'hm',        title: 'Design System Lead / Senior Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'castra-ux-designer',                   firmId: 'castra',    title: 'UX Designer',                          discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2025-06-17' },
+  { id: 'tretton37-senior-ux-designer',         firmId: 'tretton37', title: 'Senior UX Designer',                   discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-22' },
+  { id: 'advania-reykjavik-ux-ui-designer',     firmId: 'advania-reykjavik', title: 'UX/UI Designer',              discipline: 'UX Designer', seniority: 'Mid',    postedAt: '2026-06-22' },
+  { id: 'softhouse-ux-ui-designer',             firmId: 'softhouse', title: 'UX/UI Designer till Softhouse Småland', discipline: 'UX Designer', seniority: 'Mid',  postedAt: '2026-06-22' },
 ];
