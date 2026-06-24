@@ -152,4 +152,59 @@ export const JOBS: Job[] = [
   { id: 'j-105', firmId: 'softhouse', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-06-22' },
   { id: 'j-106', firmId: 'silo-ai', title: 'Visual Designer, ML Tooling', discipline: 'Visual Designer', seniority: 'Mid', postedAt: '2026-06-21' },
   { id: 'j-107', firmId: 'itm8', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-18' },
+
+  // Newly found via live search — 2026-06-24 refresh
+  // Consid
+  { id: 'j-108', firmId: 'consid', title: 'Senior UX-writer / Content Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  { id: 'j-109', firmId: 'consid', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  // HiQ
+  { id: 'j-110', firmId: 'hiq', title: 'UI-Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-111', firmId: 'hiq', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-112', firmId: 'hiq', title: 'Service Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  // Vincit
+  { id: 'j-113', firmId: 'vincit', title: 'Senior UI/UX Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  // Nitor
+  { id: 'j-114', firmId: 'nitor', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  { id: 'j-115', firmId: 'nitor', title: 'Senior Digital Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  // Telia
+  { id: 'j-116', firmId: 'telia', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-117', firmId: 'telia', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  { id: 'j-118', firmId: 'telia', title: 'UX/UI Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-119', firmId: 'telia', title: 'Service Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  // Knightec
+  { id: 'j-120', firmId: 'knightec', title: 'Senior Interaktionsdesigner', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-04-08' },
+  { id: 'j-121', firmId: 'knightec', title: 'UX/UI Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: '2026-03-11' },
+  { id: 'j-122', firmId: 'knightec', title: 'Service Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  // H&M
+  { id: 'j-123', firmId: 'hm', title: 'Design System Manager', discipline: 'UI Designer', seniority: 'Lead', postedAt: '2026-06-24' },
+  { id: 'j-124', firmId: 'hm', title: 'Digital Experience Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-125', firmId: 'hm', title: 'Experience Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  // Forefront
+  { id: 'j-126', firmId: 'forefront', title: 'Tjänstedesigner', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  // AFRY Stockholm
+  { id: 'j-127', firmId: 'afry-stockholm', title: 'Director, Design Services', discipline: 'Creative Director', seniority: 'Head of', postedAt: '2026-01-30' },
+  // Nexer Gothenburg
+  { id: 'j-128', firmId: 'nexer-gothenburg', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2025-04-06' },
+  // TietoEvry Helsinki
+  { id: 'j-129', firmId: 'tietoevry-helsinki', title: 'Senior UX/UI Designer, Care Studio', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  { id: 'j-130', firmId: 'tietoevry-helsinki', title: 'UX/UI Designer, Banktech', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-131', firmId: 'tietoevry-helsinki', title: 'UX Lead, Banking', discipline: 'UX Designer', seniority: 'Lead', postedAt: '2025-05-15' },
+  { id: 'j-132', firmId: 'tietoevry-helsinki', title: 'Senior UX/UI Designer, Tech Services Sweden', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  // Visma Oslo
+  { id: 'j-133', firmId: 'visma-oslo', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  // Cognizant London
+  { id: 'j-134', firmId: 'cognizant-london', title: 'Entry-level UX/UI Designer', discipline: 'UX Designer', seniority: 'Junior', postedAt: '2026-06-24' },
+  { id: 'j-135', firmId: 'cognizant-london', title: 'UI/UX Consultant', discipline: 'UI Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-136', firmId: 'cognizant-london', title: 'Lead UX Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: '2025-07-14' },
+  { id: 'j-137', firmId: 'cognizant-london', title: 'Digital Product Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-138', firmId: 'cognizant-london', title: 'Senior UX/UI Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-06-24' },
+  // Infosys WongDoody London
+  { id: 'j-139', firmId: 'infosys-wongdoody-london', title: 'Creative Director, Visual Design', discipline: 'Creative Director', seniority: 'Senior', postedAt: '2026-06-24' },
+  { id: 'j-140', firmId: 'infosys-wongdoody-london', title: 'Creative Director, Innovation & Technology', discipline: 'Creative Director', seniority: 'Senior', postedAt: '2025-07-15' },
+  { id: 'j-141', firmId: 'infosys-wongdoody-london', title: 'UX Director', discipline: 'UX Designer', seniority: 'Head of', postedAt: '2025-12-27' },
+  { id: 'j-142', firmId: 'infosys-wongdoody-london', title: 'Design Lead', discipline: 'UI Designer', seniority: 'Lead', postedAt: '2026-06-24' },
+  { id: 'j-143', firmId: 'infosys-wongdoody-london', title: 'Service Design Lead', discipline: 'UX Designer', seniority: 'Lead', postedAt: '2026-06-24' },
+  { id: 'j-144', firmId: 'infosys-wongdoody-london', title: 'UI Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: '2026-06-24' },
+  { id: 'j-145', firmId: 'infosys-wongdoody-london', title: 'Director, Creative Technologist', discipline: 'Creative Director', seniority: 'Head of', postedAt: '2026-06-24' },
+  { id: 'j-146', firmId: 'infosys-wongdoody-london', title: 'Product Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: '2026-06-24' },
 ];
