@@ -3,7 +3,7 @@ import type { Discipline, Seniority } from './taxonomy';
 /** ISO date stamped by the jobs-refresher pipeline on each successful run.
  *  Surfaced in the app footer so users can see how fresh the listings are.
  *  Rewritten in-place by the refresh script; do not edit by hand. */
-export const JOBS_LAST_UPDATED = '2026-06-15';
+export const JOBS_LAST_UPDATED = '2026-06-28';
 
 export type Job = {
   id: string;
