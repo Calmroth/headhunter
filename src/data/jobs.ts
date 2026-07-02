@@ -3,7 +3,7 @@ import type { Discipline, Seniority } from './taxonomy';
 /** ISO date stamped by the jobs-refresher pipeline on each successful run.
  *  Surfaced in the app footer so users can see how fresh the listings are.
  *  Rewritten in-place by the refresh script; do not edit by hand. */
-export const JOBS_LAST_UPDATED = '2026-06-15';
+export const JOBS_LAST_UPDATED = '2026-07-02';
 
 export type Job = {
   id: string;
@@ -143,25 +143,19 @@ export const JOBS: Job[] = [
   { id: 'j-86', firmId: 'capgemini-invent-paris', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(2) },
   { id: 'j-87', firmId: 'sopra-steria-paris', title: 'Art Director, Digital', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(5) },
 
-  // Cinode customer roster — sample of plausible creative openings
-  { id: 'j-88', firmId: 'rejlers', title: 'Industrial Designer, Energy', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-89', firmId: 'consid', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: hoursAgo(20), agentFound: true },
-  { id: 'j-90', firmId: 'hiq', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-91', firmId: 'hiq', title: 'Art Director, Brand Practice', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-92', firmId: 'vincit', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-93', firmId: 'twoday', title: 'Lead Visual Designer', discipline: 'Visual Designer', seniority: 'Lead', postedAt: daysAgo(1) },
-  { id: 'j-94', firmId: 'nitor', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(6) },
-  { id: 'j-95', firmId: 'knightec', title: 'Senior Industrial Designer', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: hoursAgo(11), agentFound: true },
-  { id: 'j-96', firmId: 'prevas', title: 'Industrial Designer, Embedded', discipline: 'Industrial Designer', seniority: 'Mid', postedAt: daysAgo(7) },
-  { id: 'j-97', firmId: 'b3', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(3) },
-  { id: 'j-98', firmId: 'omegapoint', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-99', firmId: 'forefront', title: 'Lead UX Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(2) },
-  { id: 'j-100', firmId: 'centigo', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(6) },
-  { id: 'j-101', firmId: 'bybrick', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: hoursAgo(7), agentFound: true },
-  { id: 'j-102', firmId: 'tretton37', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(4) },
-  { id: 'j-103', firmId: 'plantvision', title: 'Industrial Designer, Pharma', discipline: 'Industrial Designer', seniority: 'Senior', postedAt: daysAgo(9) },
-  { id: 'j-104', firmId: 'advania-reykjavik', title: 'Senior UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(5) },
-  { id: 'j-105', firmId: 'softhouse', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(2) },
-  { id: 'j-106', firmId: 'silo-ai', title: 'Visual Designer, ML Tooling', discipline: 'Visual Designer', seniority: 'Mid', postedAt: daysAgo(3) },
-  { id: 'j-107', firmId: 'itm8', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(6) },
+  // Nordic IT consultancies — live-scraped 2026-07-02
+  // Firms with confirmed open design roles: consid, hiq, nitor, knightec, hm, twoday
+  // Remaining 43 firms checked; no matching creative/design vacancies found
+  { id: 'j-88', firmId: 'consid', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-89', firmId: 'hiq', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-90', firmId: 'hiq', title: 'UI Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-91', firmId: 'nitor', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-92', firmId: 'nitor', title: 'Senior Digital Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-93', firmId: 'knightec', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-94', firmId: 'knightec', title: 'Junior UX Designer', discipline: 'UX Designer', seniority: 'Junior', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-95', firmId: 'knightec', title: 'UX Designer, Digi-Physical Design', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-96', firmId: 'knightec', title: 'UX / Service Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-97', firmId: 'hm', title: 'Digital Experience Designer (UX)', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-98', firmId: 'twoday', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: '2026-07-02', agentFound: true },
+  { id: 'j-99', firmId: 'twoday', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: '2026-07-02', agentFound: true },
 ];
