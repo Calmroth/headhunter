@@ -3,7 +3,7 @@ import type { Discipline, Seniority } from './taxonomy';
 /** ISO date stamped by the jobs-refresher pipeline on each successful run.
  *  Surfaced in the app footer so users can see how fresh the listings are.
  *  Rewritten in-place by the refresh script; do not edit by hand. */
-export const JOBS_LAST_UPDATED = '2026-06-15';
+export const JOBS_LAST_UPDATED = '2026-07-06';
 
 export type Job = {
   id: string;
@@ -64,7 +64,7 @@ export const JOBS: Job[] = [
   { id: 'j-25', firmId: 'mpc', title: 'Concept Artist', discipline: 'Concept Artist', seniority: 'Senior', postedAt: daysAgo(2) },
 
   // Germany
-  { id: 'j-26', firmId: 'bureau-borsche', title: 'Art Director', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(5) },
+  // j-26 (bureau-borsche Art Director) removed — Bureau Borsche confirmed not accepting applications as of 2026-07-06
   { id: 'j-27', firmId: 'mutabor', title: 'Senior Brand Designer', discipline: 'Brand Designer', seniority: 'Senior', postedAt: daysAgo(3) },
   { id: 'j-28', firmId: 'edenspiekermann', title: 'Lead UX Designer', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(10) },
   { id: 'j-29', firmId: 'hort', title: 'Junior Visual Designer', discipline: 'Visual Designer', seniority: 'Junior', postedAt: daysAgo(6) },
@@ -164,4 +164,67 @@ export const JOBS: Job[] = [
   { id: 'j-105', firmId: 'softhouse', title: 'Senior Visual Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(2) },
   { id: 'j-106', firmId: 'silo-ai', title: 'Visual Designer, ML Tooling', discipline: 'Visual Designer', seniority: 'Mid', postedAt: daysAgo(3) },
   { id: 'j-107', firmId: 'itm8', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(6) },
+
+  // --- Newly found via 2026-07-06 refresh ---
+
+  // Germany — Edenspiekermann (additional live roles found on edenspiekermann.com/jobs)
+  { id: 'j-108', firmId: 'edenspiekermann', title: 'UI/UX Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: daysAgo(5) },
+  { id: 'j-109', firmId: 'edenspiekermann', title: 'Senior UI/UX Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(8) },
+
+  // Copenhagen — Kontrapunkt (Concept Designer found on elvium.com ATS)
+  { id: 'j-110', firmId: 'kontrapunkt', title: 'Concept Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(6) },
+
+  // New York — Gretel (Senior Designer found on gretelny.com/senior-designer)
+  { id: 'j-111', firmId: 'gretel', title: 'Senior Designer', discipline: 'Art Director', seniority: 'Senior', postedAt: daysAgo(4) },
+
+  // Canada — MetaLab (multiple roles found on greenhouse.io/metalab)
+  { id: 'j-112', firmId: 'metalab', title: 'Principal Product Designer', discipline: 'UI Designer', seniority: 'Principal', postedAt: daysAgo(3) },
+  { id: 'j-113', firmId: 'metalab', title: 'Design Lead', discipline: 'UI Designer', seniority: 'Lead', postedAt: daysAgo(7) },
+
+  // New York — Collins (Senior Designer found on wearecollins.com/jobs/designer/)
+  { id: 'j-114', firmId: 'collins', title: 'Senior Designer', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(2) },
+
+  // Canada — Sid Lee (roles found on sidlee.com/en/careers/job-listing)
+  { id: 'j-115', firmId: 'sid-lee', title: 'Graphic Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(9) },
+  { id: 'j-116', firmId: 'sid-lee', title: 'UI Designer', discipline: 'UI Designer', seniority: 'Mid', postedAt: daysAgo(14) },
+
+  // Stockholm — Tietoevry Banking (UX/UI Designer found on careers.tietoevry.com)
+  { id: 'j-117', firmId: 'tietoevry-stockholm', title: 'UX/UI Designer, Banking', discipline: 'UI Designer', seniority: 'Mid', postedAt: daysAgo(5) },
+
+  // Oslo — Bakken & Baeck (roles found on bakkenbaeck.com/join)
+  { id: 'j-118', firmId: 'bakken-baeck', title: 'Brand Designer', discipline: 'Brand Designer', seniority: 'Mid', postedAt: daysAgo(11) },
+  { id: 'j-119', firmId: 'bakken-baeck', title: 'Design Director', discipline: 'Creative Director', seniority: 'Lead', postedAt: daysAgo(14) },
+
+  // London — Moving Brands (Designer found on movingbrands.com/careers)
+  { id: 'j-120', firmId: 'moving-brands', title: 'Designer', discipline: 'Visual Designer', seniority: 'Mid', postedAt: daysAgo(3) },
+
+  // Oslo — twoday (UX Designer found on twoday.no/jobb-hos-oss)
+  { id: 'j-121', firmId: 'twoday', title: 'UX Designer', discipline: 'UX Designer', seniority: 'Mid', postedAt: daysAgo(2) },
+
+  // Copenhagen — Designit (Junior Brand Designer found on startup.jobs)
+  { id: 'j-122', firmId: 'designit-copenhagen', title: 'Junior Brand Designer', discipline: 'Brand Designer', seniority: 'Junior', postedAt: daysAgo(8) },
+
+  // San Francisco — Frog (Senior UX Designer found on frog.co/careers/jobs/)
+  { id: 'j-123', firmId: 'frog-sanfrancisco', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(4) },
+
+  // London — Accenture Song (Visual Design Associate Manager found on LinkedIn, June 2026)
+  { id: 'j-124', firmId: 'accenture-song-london', title: 'Visual Design Associate Manager', discipline: 'Visual Designer', seniority: 'Senior', postedAt: daysAgo(1) },
+
+  // London — Deloitte Digital (UX Designer – Consultant found on jobs2.deloitte.com)
+  { id: 'j-125', firmId: 'deloitte-digital-london', title: 'UX Designer, Consultant', discipline: 'UX Designer', seniority: 'Mid', postedAt: daysAgo(7) },
+
+  // London — Publicis Sapient (Senior UX Designer found on careers.publicissapient.com)
+  { id: 'j-126', firmId: 'publicis-sapient-london', title: 'Senior UX Designer', discipline: 'UX Designer', seniority: 'Senior', postedAt: daysAgo(3) },
+
+  // Gothenburg — Nexer Group (Senior UX/UI Designer found on designproject.io/nexer)
+  { id: 'j-127', firmId: 'nexer-gothenburg', title: 'Senior UX/UI Designer', discipline: 'UI Designer', seniority: 'Senior', postedAt: daysAgo(6) },
+
+  // London — Infosys Wongdoody (UX Lead found on builtinlondon.uk)
+  { id: 'j-128', firmId: 'infosys-wongdoody-london', title: 'UX Lead', discipline: 'UX Designer', seniority: 'Lead', postedAt: daysAgo(9) },
+
+  // Sydney — For The People (Design Director found on forthepeople.agency)
+  { id: 'j-129', firmId: 'for-the-people', title: 'Design Director', discipline: 'Creative Director', seniority: 'Lead', postedAt: daysAgo(12) },
+
+  // Amsterdam — Random Studio (Creative Tech Lead found on builtin.com/random-studio)
+  { id: 'j-130', firmId: 'random-studio', title: 'Creative Tech Lead', discipline: 'CG Generalist', seniority: 'Lead', postedAt: daysAgo(5) },
 ];
