@@ -57,7 +57,6 @@ export const CONTACTS: Contact[] = [
   { firmId: 'ideo-london', name: 'A. Rahman', role: 'Recruiter, Design', email: 'careers@ideo.com' },
   { firmId: 'frog-london', name: 'C. Marin', role: 'Talent Lead, EMEA', email: 'careers@frog.co' },
   { firmId: 'frog-sanfrancisco', name: 'P. Walsh', role: 'Director of Talent', email: 'careers@frog.co' },
-  { firmId: 'mckinsey-design-stockholm', name: 'A. Ekberg', role: 'Senior Recruiter, Design' },
   { firmId: 'designit-copenhagen', name: 'H. Møller', role: 'Studio Director', email: 'careers@designit.com' },
   { firmId: 'designit-london', name: 'D. Khan', role: 'Head of Talent, EMEA', email: 'careers@designit.com' },
   { firmId: 'publicis-sapient-london', name: 'R. Williams', role: 'Talent Director, Experience', email: 'careers@publicissapient.com' },

@@ -28,6 +28,16 @@ export function FirmPopup({ firm, roleCount, jobs }: Props) {
             {firm.city.toUpperCase()} · {firm.country.toUpperCase()} · {roleCount}{' '}
             {roleCount === 1 ? 'ROLE' : 'ROLES'}
           </span>
+          {/* The address is the sourced fact; the dot is only city-accurate,
+              and the popup says which is which rather than letting the pin
+              imply a precision the roster doesn't have. */}
+          {firm.address ? (
+            <span className="firm-popup-address">{firm.address}</span>
+          ) : (
+            <span className="firm-popup-address firm-popup-address--approx">
+              {firm.city} — no street address on record
+            </span>
+          )}
           {website && (
             <a
               className="firm-popup-website"
@@ -55,6 +65,8 @@ export function FirmPopup({ firm, roleCount, jobs }: Props) {
           )}
         </div>
       </header>
+
+      {firm.note && <p className="firm-popup-note">{firm.note}</p>}
 
       <div className="firm-popup-divider" />
 

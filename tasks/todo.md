@@ -110,3 +110,41 @@ Per user request:
 - [x] Three-column layout: left rail | globe | right rail on ≥1200px; collapses thoughtfully at 1100px and 900px breakpoints
 - [x] `npx tsc --noEmit` clean
 
+
+## Iteration: faster + more accurate map (2026-08-19)
+
+Per user request — "en snabbare och mer träffsäker karta", verified against a
+fresh search pass on the same day.
+
+Speed:
+- [x] Country geometry pre-baked at build time (`scripts/build-countries.mjs`):
+      filtered to countries with firms, topology-preserving simplification,
+      antimeridian rings dropped, re-quantized. 114 KB gz shipped as a
+      content-hashed Vite asset, replacing a 895 KB gz runtime fetch to unpkg.
+- [x] GeoJSON country layer no longer remounts on filter/focus changes — the
+      old `key` rebuilt ~46k path nodes on every search keystroke.
+- [x] Tile layers: `updateWhenZooming={false}` + `keepBuffer` so a flyTo stops
+      requesting a fresh tile pyramid per frame across both Esri layers.
+- [x] Dropped the now-dead `matchingCountryIds` computation and prop.
+
+Accuracy:
+- [x] `pathOptions.className` never reached the DOM in react-leaflet, so every
+      `.firm-marker*` rule was dead CSS — hover, active, match and dim states
+      had no visual encoding. Classes are now synced onto the rendered path.
+- [x] Pan boundary widened from a Europe box to the world: ~40 firms in the
+      US, Canada, Japan and Australia were outside anywhere the camera could
+      travel, so clicking them in the rails flew nowhere. Resting view is
+      still Europe.
+- [x] Firm coordinates are city-precision and derived from one `CITY_COORDS`
+      table, replacing hand-written per-firm lat/lng that implied street
+      accuracy it never had. `precision` + `address` record what is sourced.
+- [x] Cluster discs centre on the city coordinate, not the first firm in the list.
+- [x] `npm run check:data` guards referential integrity on every build.
+
+Roster verification (see RETIRED_FIRMS for reasons):
+- [x] Removed: Frontify Studio (Zürich), Kurppa Studio (Helsinki),
+      MPC (folded into The Mill), McKinsey Design Stockholm (closed 2024).
+- [x] Corrected: Acne (agency, not the fashion label; website fixed),
+      Method (New York, not Sydney), itm8 (Herning, not Aarhus),
+      Knightec → Knightec Group (Semcon merger).
+- [x] Addresses recorded for 14 firms; notes on The Mill, Ueno, Silo AI, Studio Dumbar.
