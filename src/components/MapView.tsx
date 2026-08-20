@@ -14,19 +14,24 @@ import L from 'leaflet';
 import { feature } from 'topojson-client';
 import type { Topology, GeometryObject } from 'topojson-specification';
 import type { Feature, FeatureCollection } from 'geojson';
-import { FIRMS, FIRMS_BY_ID, type Firm } from '../data/firms';
+import { CITY_COORDS, FIRMS, FIRMS_BY_ID, type Firm } from '../data/firms';
 
 /** Countries we have firms in. Polygon clicks outside this set are inert. */
 const COUNTRIES_WITH_FIRMS = new Set(FIRMS.map((f) => f.countryCode));
 import { JOBS } from '../data/jobs';
 import { useReducedMotion } from '../hooks/useReducedMotion';
-import { NUMERIC_TO_ALPHA2 } from '../data/countryCodeMap';
 import { monogram } from '../utils/monogram';
 import { FirmPopup } from './FirmPopup';
 import { animatePopupIn, closePopupWithFade, pulseClick, pulseHover, startBeacon } from '../utils/animations';
 import './MapView.css';
 
-const COUNTRIES_URL = 'https://unpkg.com/world-atlas@2/countries-10m.json';
+// Country outlines, pre-filtered to the countries that have firms and
+// simplified to the detail the map can actually show. Built by
+// `npm run build:countries`; ~114 KB gzipped against the 895 KB gzipped
+// world-atlas file this used to pull from unpkg, with no third-party DNS +
+// TLS handshake in the critical path. Referenced through `new URL` so Vite
+// emits it as a content-hashed asset — cached immutably, never revalidated.
+const COUNTRIES_URL = new URL('../data/countries.topo.json', import.meta.url).href;
 
 // Esri World Light Gray Canvas — free, English-only labels, minimal style.
 const TILE_BASE_URL =
@@ -65,9 +70,14 @@ const EUROPE_BOUNDS: L.LatLngBoundsLiteral = [
   [34, -25],
   [72, 45],
 ];
-const EUROPE_MAX_BOUNDS: L.LatLngBoundsLiteral = [
-  [20, -45],
-  [80, 65],
+// Pan boundary. Europe is where the map rests and what `kind: 'world'` frames,
+// but a third of the roster sits in North America, Japan and Australia — the
+// old Europe-shaped boundary put those firms outside anywhere the camera could
+// travel, so clicking one in the rails flew to a place the map refused to hold.
+// The boundary is the world; the resting frame is still Europe.
+const WORLD_MAX_BOUNDS: L.LatLngBoundsLiteral = [
+  [-85, -180],
+  [85, 180],
 ];
 
 export type MapTarget =
@@ -103,7 +113,6 @@ export type MapTarget =
 type Props = {
   focusedFirmId: string | null;
   focusedCountryCode: string | null; // alpha-2
-  matchingCountryIds?: Set<string>; // alpha-2
   matchingFirmIds?: ReadonlySet<string>;
   /** Firms in the user's home city. Get an ambient beacon to mark "you are here". */
   homeFirmIds?: ReadonlySet<string>;
@@ -130,7 +139,7 @@ type Props = {
   onReturnToGlobe?: () => void;
 };
 
-type CountryFeature = Feature & { id: string; properties: { name: string } };
+type CountryFeature = Feature & { id: string; properties: { name: string; alpha2: string } };
 
 const initialCenter: [number, number] = [54, 10]; // central Europe
 const initialZoom = WORLD_ZOOM;
@@ -138,7 +147,6 @@ const initialZoom = WORLD_ZOOM;
 export function MapView({
   focusedFirmId,
   focusedCountryCode,
-  matchingCountryIds,
   matchingFirmIds,
   homeFirmIds,
   hasProfile,
@@ -162,6 +170,12 @@ export function MapView({
       ? 'dark'
       : 'light'
   );
+  // The polygon mouseover handler is bound once, at layer mount, and needs the
+  // current theme every time it fires. A ref gives it that without making the
+  // layer's identity depend on the theme.
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
+
   useEffect(() => {
     const onChange = (e: Event) => {
       const detail = (e as CustomEvent<'light' | 'dark'>).detail;
@@ -172,29 +186,27 @@ export function MapView({
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    fetch(COUNTRIES_URL)
+    const ac = new AbortController();
+    // The payload is already restricted to countries with firms, already
+    // simplified, and already stripped of antimeridian-crossing rings — see
+    // scripts/build-countries.mjs. All that's left at runtime is decoding the
+    // arcs. The COUNTRIES_WITH_FIRMS guard stays as a cheap consistency check
+    // in case the roster shrinks without a rebuild.
+    fetch(COUNTRIES_URL, { signal: ac.signal })
       .then((r) => r.json() as Promise<Topology>)
       .then((topo) => {
-        if (cancelled) return;
         const obj = topo.objects.countries as GeometryObject;
         const geo = feature(topo, obj) as FeatureCollection;
-        // Render only countries with firms. Skipping the rest fixes the
-        // antimeridian-wrap problem at the data layer: Russia, Antarctica,
-        // Fiji, etc. simply don't get drawn, so no polygon ring can stretch
-        // a band across the map.
-        const features = (geo.features as CountryFeature[]).filter((f) => {
-          const alpha2 = NUMERIC_TO_ALPHA2[f.id];
-          return alpha2 && COUNTRIES_WITH_FIRMS.has(alpha2);
-        });
-        setCountries(features);
+        setCountries(
+          (geo.features as CountryFeature[]).filter((f) =>
+            COUNTRIES_WITH_FIRMS.has(f.properties.alpha2)
+          )
+        );
       })
       .catch(() => {
-        if (!cancelled) setCountries([]);
+        if (!ac.signal.aborted) setCountries([]);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => ac.abort();
   }, []);
 
   const roleCounts = useMemo(() => {
@@ -257,7 +269,7 @@ export function MapView({
         zoom={initialZoom}
         minZoom={WORLD_ZOOM}
         maxZoom={CITY_ZOOM}
-        maxBounds={EUROPE_MAX_BOUNDS}
+        maxBounds={WORLD_MAX_BOUNDS}
         maxBoundsViscosity={0.85}
         worldCopyJump={false}
         zoomControl={false}
@@ -267,19 +279,42 @@ export function MapView({
         touchZoom={false}
         className="leaflet-root"
       >
-        <TileLayer url={TILE_BASE_URL} attribution={TILE_ATTR} maxZoom={16} />
-        <TileLayer url={TILE_LABELS_URL} maxZoom={16} pane="tilePane" />
+        {/* `updateWhenZooming={false}` is the important one: without it every
+            intermediate frame of a flyTo requests a fresh tile pyramid, and
+            the two Esri layers double that. `keepBuffer` holds the ring of
+            tiles just off-screen so a short pan doesn't refetch. */}
+        <TileLayer
+          url={TILE_BASE_URL}
+          attribution={TILE_ATTR}
+          maxZoom={16}
+          updateWhenZooming={false}
+          updateWhenIdle={true}
+          keepBuffer={3}
+        />
+        <TileLayer
+          url={TILE_LABELS_URL}
+          maxZoom={16}
+          pane="tilePane"
+          updateWhenZooming={false}
+          updateWhenIdle={true}
+          keepBuffer={3}
+        />
 
         {countries.length > 0 && (
           <Pane name="countriesPane" style={{ zIndex: 350 }}>
           <GeoJSON
-            key={`${theme}-${focusedCountryCode ?? 'none'}-${(matchingCountryIds && [...matchingCountryIds].sort().join(',')) ?? ''}`}
+            /* No key. The layer is deliberately mounted once: country
+               polygons carry no persistent style, so focus and match state
+               don't change a single one of them. Keying on those used to tear
+               down and rebuild ~48k path nodes on every keystroke in the
+               search field. Theme is read through a ref instead, so the
+               mouseover handler stays correct without a remount. */
             pane="countriesPane"
             data={{ type: 'FeatureCollection', features: countries } as FeatureCollection}
             style={(f) => countryStyle(f as CountryFeature)}
             onEachFeature={(f, layer) => {
               const cf = f as CountryFeature;
-              const alpha2 = NUMERIC_TO_ALPHA2[cf.id];
+              const alpha2 = cf.properties.alpha2;
               if (!alpha2 || !COUNTRIES_WITH_FIRMS.has(alpha2)) return;
               const name = cf.properties?.name ?? '';
               layer.bindTooltip(
@@ -310,7 +345,7 @@ export function MapView({
                   // (paper tones wash against the dark tile base).
                   path.setStyle({
                     fillColor: CARD_TONE,
-                    fillOpacity: theme === 'dark' ? 0 : 0.04,
+                    fillOpacity: themeRef.current === 'dark' ? 0 : 0.04,
                     stroke: true,
                     color: BORDERLINE,
                     weight: 1.25,
@@ -446,6 +481,16 @@ function FirmMarkersLayer({
   // Refs for programmatic popup open.
   const markerRefs = useRef<Record<string, L.CircleMarker | null>>({});
 
+  // Every path this layer renders, by a stable key, plus the classes it should
+  // be carrying this render. Filled during render; flushed to the DOM by the
+  // effect below, which runs after every render so hover / active / match
+  // changes land without remounting a single Leaflet layer.
+  const pathRefs = useRef(new Map<string, L.Path | null>());
+  const pathClasses = new Map<string, string>();
+  useEffect(() => {
+    for (const [key, cls] of pathClasses) syncPathClass(pathRefs.current.get(key), cls);
+  });
+
   // The popup opens after the flyTo finishes; markers for clustered cities
   // only mount once zoom reaches CITY_ZOOM, so we retry across the animation.
   useEffect(() => {
@@ -563,6 +608,8 @@ function FirmMarkersLayer({
       else byCity.set(key, [f]);
     }
     return Array.from(byCity.values()).map((fs) => {
+      const cityCoord =
+        CITY_COORDS[`${fs[0].countryCode}|${fs[0].city}`] ?? ([fs[0].lat, fs[0].lng] as const);
       const jittered = fs.map((f, i) => jitterFirm(f, i, fs.length));
       const bounds = jittered.reduce<L.LatLngBounds | null>((b, j) => {
         const ll = L.latLng(j.lat, j.lng);
@@ -572,8 +619,11 @@ function FirmMarkersLayer({
         key: `${fs[0].countryCode}-${fs[0].city}`,
         city: fs[0].city,
         country: fs[0].country,
-        centerLat: fs[0].lat,
-        centerLng: fs[0].lng,
+        // The city coordinate, not whichever firm happens to sort first.
+        // Every firm in a city shares it, but jittered positions do not, and
+        // the disc is the click target for the city as a whole.
+        centerLat: cityCoord[0],
+        centerLng: cityCoord[1],
         firms: fs,
         jittered, // firm coords for street-level layout
         bounds,
@@ -666,6 +716,9 @@ function FirmMarkersLayer({
             ]
               .filter(Boolean)
               .join(' ');
+            pathClasses.set(`cluster-${c.key}`, stateClass);
+            pathClasses.set(`core-${c.key}`, 'firm-marker cluster-core');
+
             const onAreaClick = () => {
               if (!c.bounds) return;
               onFirmHover(null);
@@ -686,6 +739,9 @@ function FirmMarkersLayer({
             return (
               <Fragment key={`cluster-${c.key}`}>
               <CircleMarker
+                ref={(r) => {
+                  pathRefs.current.set(`cluster-${c.key}`, (r as unknown as L.Path) ?? null);
+                }}
                 center={[c.centerLat, c.centerLng]}
                 radius={radius}
                 bubblingMouseEvents={false}
@@ -721,6 +777,9 @@ function FirmMarkersLayer({
                   hover/click always belongs to the area, never a stray
                   pixel-hit on the inner dot. */}
               <CircleMarker
+                ref={(r) => {
+                  pathRefs.current.set(`core-${c.key}`, (r as unknown as L.Path) ?? null);
+                }}
                 center={[c.centerLat, c.centerLng]}
                 radius={coreRadius}
                 interactive={false}
@@ -769,6 +828,8 @@ function FirmMarkersLayer({
         const dotColor = isDim ? DIM_INK : isMatch ? FIT_GREEN : OXBLOOD;
         const fillOpacity = isDim ? 0.5 : isMatch ? 0.92 : 0.78;
 
+        pathClasses.set(`firm-${f.id}`, stateClass);
+
         const jobs = jobsByFirm.get(f.id) ?? [];
 
         return (
@@ -776,6 +837,7 @@ function FirmMarkersLayer({
             key={f.id}
             ref={(r) => {
               markerRefs.current[f.id] = (r as unknown as L.CircleMarker) ?? null;
+              pathRefs.current.set(`firm-${f.id}`, (r as unknown as L.Path) ?? null);
             }}
             center={[pos.lat, pos.lng]}
             radius={baseRadius}
@@ -858,6 +920,36 @@ function FirmMarkersLayer({
       })}
     </>
   );
+}
+
+/** Class-name prefixes this module owns on a Leaflet path. Anything else on
+ *  the element (Leaflet's own `leaflet-interactive`) is left alone. */
+const OWNED_CLASS_PREFIXES = ['firm-marker', 'cluster-'];
+
+/**
+ * Puts our state classes on a Leaflet path's rendered <path> element.
+ *
+ * `pathOptions.className` looks like it should do this, but it never reaches
+ * the DOM: react-leaflet constructs the layer before that option exists, and
+ * the only thing it does with pathOptions afterwards is `setStyle`, which
+ * writes presentation attributes and not the class list. Every `.firm-marker`
+ * rule in MapView.css — the entrance stagger, the hover and active scale, the
+ * match / dim treatment that DESIGN.md relies on for non-colour signalling —
+ * was styling an element that never carried the class.
+ */
+function syncPathClass(marker: L.Path | null | undefined, className: string) {
+  const path = (marker as unknown as { _path?: SVGPathElement } | null | undefined)?._path;
+  if (!path) return;
+  const wanted = className.split(' ').filter(Boolean);
+  for (const existing of Array.from(path.classList)) {
+    if (
+      OWNED_CLASS_PREFIXES.some((prefix) => existing.startsWith(prefix)) &&
+      !wanted.includes(existing)
+    ) {
+      path.classList.remove(existing);
+    }
+  }
+  for (const c of wanted) path.classList.add(c);
 }
 
 /**

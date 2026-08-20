@@ -50,6 +50,26 @@
   color: var(--quiet-ink);
 }
 
+.firm-popup-address {
+  margin-top: 0.1875rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--quiet-ink);
+}
+.firm-popup-address--approx {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+.firm-popup-note {
+  margin: 0.5rem 0.875rem 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--quiet-ink);
+  border-left: 2px solid var(--hairline);
+  padding-left: 0.5rem;
+}
+
 .firm-popup-website {
   display: inline-flex;
   align-items: center;

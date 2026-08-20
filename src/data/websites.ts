@@ -5,13 +5,12 @@
 export const WEBSITES: Record<string, string> = {
   // Pure agencies / design studios (Band A)
   'north-kingdom': 'https://northkingdom.com',
-  acne: 'https://acnestudios.com',
+  acne: 'https://www.acne.se',
   snask: 'https://snask.com',
   bvd: 'https://bvd.se',
   'kurppa-hosk': 'https://kurppahosk.com',
   'goodbye-kansas': 'https://goodbyekansas.com',
   bond: 'https://www.thisisbond.com',
-  kurppa: 'https://kurppa.fi',
   'bakken-baeck': 'https://bakkenbaeck.com',
   heydays: 'https://heydays.no',
   'e-types': 'https://e-types.com',
@@ -21,7 +20,6 @@ export const WEBSITES: Record<string, string> = {
   'dn-co': 'https://dn-co.com',
   'moving-brands': 'https://movingbrands.com',
   'the-mill': 'https://themill.com',
-  mpc: 'https://www.mpcvfx.com',
   'bureau-borsche': 'https://bureauborsche.com',
   mutabor: 'https://mutabor.com',
   edenspiekermann: 'https://edenspiekermann.com',
@@ -37,10 +35,9 @@ export const WEBSITES: Record<string, string> = {
   'character-sf': 'https://charactersf.com',
   metalab: 'https://metalab.com',
   'sid-lee': 'https://sidlee.com',
-  method: 'https://method.com',
+  method: 'https://www.method.com',
   'for-the-people': 'https://forthepeople.agency',
   ueno: 'https://ueno.co',
-  'frontify-creative': 'https://frontify.com',
 
   // Engineering / IT consultancies (Band C)
   'afry-stockholm': 'https://afry.com',
@@ -69,7 +66,6 @@ export const WEBSITES: Record<string, string> = {
   'ideo-london': 'https://ideo.com',
   'ideo-tokyo': 'https://ideo.com',
   'mckinsey-design-newyork': 'https://mckinsey.com/capabilities/mckinsey-design',
-  'mckinsey-design-stockholm': 'https://mckinsey.com/capabilities/mckinsey-design',
   'designit-copenhagen': 'https://designit.com',
   'designit-london': 'https://designit.com',
   'designit-munich': 'https://designit.com',

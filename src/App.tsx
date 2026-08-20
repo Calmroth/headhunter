@@ -279,17 +279,6 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focusedCountry, focusedFirmId, profile?.lat, profile?.lng]);
 
-  const matchingCountryIds = useMemo(() => {
-    if (!profile) return new Set<string>();
-    const set = new Set<string>();
-    for (const job of JOBS) {
-      if (!profile.disciplines.includes(job.discipline)) continue;
-      const firm = FIRMS_BY_ID[job.firmId];
-      if (firm) set.add(firm.countryCode);
-    }
-    return set;
-  }, [profile]);
-
   /** Firms that have at least one job matching the user's disciplines. */
   const matchingFirmIds = useMemo(() => {
     if (!profile) return new Set<string>();
@@ -622,7 +611,6 @@ export function App() {
           <MapView
             focusedFirmId={focusedFirmId}
             focusedCountryCode={regionAlpha2}
-            matchingCountryIds={matchingCountryIds}
             matchingFirmIds={matchingFirmIds}
             homeFirmIds={homeFirmIds}
             hasProfile={!!profile}

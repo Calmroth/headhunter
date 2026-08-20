@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "build": "npm run check:data && tsc -b && vite build",
+    "preview": "vite preview",
+    "build:countries": "node --experimental-strip-types scripts/build-countries.mjs",
+    "check:data": "node --experimental-strip-types scripts/check-data.mjs"
   },
   "dependencies": {
     "@types/animejs": "^3.1.13",
@@ -26,7 +28,9 @@
     "@types/topojson-client": "^3.1.5",
     "@types/topojson-specification": "^1.0.5",
     "@vitejs/plugin-react": "^6.0.1",
+    "topojson-simplify": "^3.0.3",
     "typescript": "^5.6.3",
-    "vite": "^8.0.12"
+    "vite": "^8.0.12",
+    "world-atlas": "^2.0.2"
   }
 }
