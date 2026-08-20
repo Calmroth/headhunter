@@ -170,21 +170,50 @@
    any visible stroke reads as a crude polygon outline that disagrees with
    the underlying tile. The tile already carries the real boundary at this
    scale; we let it do the work. */
-.leaflet-countriesPane-pane {
+/* Leaflet's Map.createPane strips the literal substring "Pane" from the pane
+   name, so <Pane name="countriesPane"> renders as `.leaflet-countries-pane` —
+   NOT `.leaflet-countriesPane-pane`. Selectors written the obvious way match
+   nothing, silently. */
+.leaflet-countries-pane {
   transition: opacity var(--d-base) var(--ease-out-quart);
 }
-.leaflet-root.is-zoomed-deep .leaflet-countriesPane-pane {
+.leaflet-root.is-zoomed-deep .leaflet-countries-pane {
   pointer-events: none;
   opacity: 0;
 }
 /* Leaflet's .leaflet-interactive class re-asserts pointer-events on each path,
    overriding the pane. Defeat it explicitly so country polygons cannot receive
    hover events past country zoom. */
-.leaflet-root.is-zoomed-deep .leaflet-countriesPane-pane .leaflet-interactive {
+.leaflet-root.is-zoomed-deep .leaflet-countries-pane .leaflet-interactive {
   pointer-events: none !important;
 }
 .leaflet-root.is-zoomed-deep .country-tooltip {
   display: none !important;
+}
+
+/* No basemap reached: the country polygons ARE the map, so they must survive
+   the deep-zoom hide. Pointer events stay off — they are scenery now, not a
+   click target. */
+.leaflet-root.is-zoomed-deep.basemap-down .leaflet-countries-pane {
+  opacity: 1;
+}
+
+/* Quiet corner note naming the basemap the user is actually looking at. */
+.basemap-notice {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 500;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--quiet-ink);
+  background: color-mix(in oklab, var(--warm-paper) 88%, transparent);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  pointer-events: none;
 }
 
 /* Country tooltip — paper-toned chip that follows the cursor. Fade + rise

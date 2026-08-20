@@ -1,0 +1,46 @@
+/* Failure notice for a subtree that threw. Reads as a quiet page element,
+   not an alarm — the surrounding UI is still usable. */
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 100%;
+  min-height: 12rem;
+  padding: 2rem;
+  text-align: center;
+  background: var(--warm-paper);
+  color: var(--deep-ink);
+}
+
+.error-boundary-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.error-boundary-body {
+  max-width: 34ch;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--quiet-ink);
+}
+
+.error-boundary-action {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--deep-ink);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color var(--d-fast) var(--ease-out-quart),
+    color var(--d-fast) var(--ease-out-quart);
+}
+.error-boundary-action:hover {
+  border-color: var(--deep-ink);
+  color: var(--oxblood);
+}
