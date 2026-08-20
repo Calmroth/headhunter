@@ -11,6 +11,25 @@ Three subagents in `.claude/agents/` form a pipeline:
 
 See `tasks/todo.md` for the current plan and data layout.
 
+## Jobs Pipeline (no LLM)
+
+The daily listings refresh is deterministic and costs nothing:
+
+- `npm run discover:jobs` — probes known ATS endpoints + schema.org JobPosting
+  markup, records each firm's source in `src/data/jobSources.ts`. Run when
+  firms are added or a source stops working.
+- `npm run refresh:jobs` — reads those sources, reconciles `src/data/jobs.ts`.
+  Runs daily in CI.
+- `npm run test:jobs` — offline tests for the classifier and reconciliation
+  rules. Runs before every refresh in CI.
+
+`src/data/jobs.ts` is GENERATED. Edit the source or the classifier, not the file.
+
+Two rules the reconciler will not break: a listing is only removed for a firm
+that was successfully read this run (unreachable and no-source both mean "we
+learned nothing"), and a title that does not map to the taxonomy is skipped and
+reported rather than guessed.
+
 ## Data Source of Truth
 - `data/firms.json`, `data/contacts.json`, `data/addresses.json`, `data/outreach.json`
 - Pretty-printed JSON, 2-space indent, sorted by `id`

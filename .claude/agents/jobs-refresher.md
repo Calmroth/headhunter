@@ -20,6 +20,21 @@ tools:
   - Agent
 ---
 
+> **SUPERSEDED — the daily refresh no longer uses this agent.**
+>
+> `npm run refresh:jobs` does the same job deterministically: it reads each
+> firm's recorded source from `src/data/jobSources.ts`, fetches the postings
+> over plain HTTP, maps titles with the table in `scripts/lib/classify.mjs`,
+> and reconciles with `scripts/lib/reconcile.mjs`. No API key, no model, no
+> cost, and it cannot invent a listing. `npm run discover:jobs` refills the
+> source registry and is deterministic too.
+>
+> Use this agent only for judgement work the pipeline deliberately refuses:
+> deciding whether an unusual title deserves a new taxonomy entry, or working
+> out where a firm publishes openings when probing finds nothing. Do not use
+> it to write `src/data/jobs.ts` — that file is generated.
+
+
 # Jobs Refresher
 
 You refresh `src/data/jobs.ts` and `src/data/firms.ts` against live careers
