@@ -3,6 +3,7 @@ import { playSplashIntro } from './utils/animations';
 import { TopBar } from './components/TopBar';
 import { LinkedInSignIn } from './components/LinkedInSignIn';
 import { MapView, type MapTarget } from './components/MapView';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { SearchBar } from './components/SearchBar';
 import { JobsList } from './components/JobsList';
 import { FirmsList } from './components/FirmsList';
@@ -608,6 +609,10 @@ export function App() {
         />
 
         <section className="center-stage" aria-label="Map of consultancies and roles">
+          {/* The map is the heaviest subtree and the only one with third-party
+              runtime dependencies. Boundary keeps a throw in there from taking
+              the rails and the search field down with it. */}
+          <ErrorBoundary label="The map">
           <MapView
             focusedFirmId={focusedFirmId}
             focusedCountryCode={regionAlpha2}
@@ -628,6 +633,7 @@ export function App() {
               setMapTarget({ kind: 'world', key: nextKey() });
             }}
           />
+          </ErrorBoundary>
 
           <SearchBar
             examples={examples}

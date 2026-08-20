@@ -33,13 +33,68 @@ import './MapView.css';
 // emits it as a content-hashed asset — cached immutably, never revalidated.
 const COUNTRIES_URL = new URL('../data/countries.topo.json', import.meta.url).href;
 
-// Esri World Light Gray Canvas — free, English-only labels, minimal style.
-const TILE_BASE_URL =
-  'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
-const TILE_LABELS_URL =
-  'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
-const TILE_ATTR =
-  'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, DeLorme, NAVTEQ';
+/**
+ * Basemap providers, tried in order. The tile host is the one runtime
+ * dependency this app cannot serve itself, so it gets a fallback rather than a
+ * single point of failure: if the first provider is unreachable — outage, DNS,
+ * a corporate proxy, an ad blocker that catches tile CDNs — the map moves to
+ * the next one instead of rendering blank paper.
+ */
+type Basemap = {
+  id: string;
+  /** Stacked bottom-up. Esri splits imagery and labels; CARTO ships one layer. */
+  urls: string[];
+  attribution: string;
+  maxZoom: number;
+};
+
+const BASEMAPS: Basemap[] = [
+  {
+    // Esri World Light Gray Canvas — free, English-only labels, minimal style.
+    id: 'esri-light-gray',
+    urls: [
+      'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+      'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    ],
+    attribution:
+      'Tiles &copy; <a href="https://www.esri.com">Esri</a> &mdash; Esri, DeLorme, NAVTEQ',
+    maxZoom: 16,
+  },
+  {
+    // CARTO Positron — light, label-inclusive, closest match to the paper base.
+    id: 'carto-positron',
+    urls: ['https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+      '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 19,
+  },
+];
+
+/**
+ * Failed tiles tolerated from a provider that has never served one before it
+ * is judged unreachable. Individual tiles legitimately 404 past the edge of a
+ * provider's coverage, so a single error must not trip the switch — but a host
+ * that is actually down fails every tile in the viewport at once, which clears
+ * this in the first render.
+ */
+const TILE_ERROR_THRESHOLD = 6;
+
+type BasemapStatus =
+  /** No verdict yet — no tile has loaded or failed. */
+  | 'pending'
+  /** The preferred provider is serving tiles. */
+  | 'ok'
+  /** A fallback provider is serving tiles. */
+  | 'degraded'
+  /** Every provider failed; the bundled polygons are carrying the map. */
+  | 'down';
+
+/** Country geometry request budget. Same-origin and immutably cached, so a
+ *  slow response means something is wrong rather than merely far away. */
+const COUNTRIES_TIMEOUT_MS = 12_000;
+const COUNTRIES_RETRIES = 2;
+const COUNTRIES_RETRY_DELAY_MS = 600;
 
 const OXBLOOD = '#b8482e';
 const PAPER = '#f8f4ec';
@@ -49,6 +104,10 @@ const DIM_INK = '#9a948d';
 // country onto card paper instead of washing it with ink (see DESIGN.md §4).
 const CARD_TONE = '#f3eee5'; // oklch(95% 0.008 60), one step above warm-paper
 const BORDERLINE = '#c8c0b9'; // oklch(80% 0.01 30), thin country edge
+// Painted only when no basemap could be reached, so the country polygons
+// have to read as land themselves. One step off warm-paper: enough to
+// separate land from sea, quiet enough to keep the Tonal Map Rule.
+const LAND_TONE = '#efe8dc';
 
 // Four-stage stepwise zoom, calibrated for the Europe-focused world view.
 // "World" here means "the whole map at rest" — which is Europe, not the planet.
@@ -176,6 +235,22 @@ export function MapView({
   const themeRef = useRef(theme);
   themeRef.current = theme;
 
+  // Whether a basemap is actually rendering. Drives whether the country
+  // polygons stay invisible (tiles are the geography) or get painted as land
+  // (they ARE the geography).
+  const [basemapStatus, setBasemapStatus] = useState<BasemapStatus>('pending');
+  const basemapRef = useRef(basemapStatus);
+  basemapRef.current = basemapStatus;
+
+  // The polygon layer mounts once and is never keyed, so a status change has
+  // to be pushed onto it imperatively rather than through the style prop.
+  const countriesLayerRef = useRef<L.GeoJSON | null>(null);
+  useEffect(() => {
+    countriesLayerRef.current?.setStyle((f) => countryStyle(f as CountryFeature));
+    // countryStyle reads basemapRef, which is already current by this point.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [basemapStatus, countries]);
+
   useEffect(() => {
     const onChange = (e: Event) => {
       const detail = (e as CustomEvent<'light' | 'dark'>).detail;
@@ -186,27 +261,60 @@ export function MapView({
   }, []);
 
   useEffect(() => {
-    const ac = new AbortController();
     // The payload is already restricted to countries with firms, already
     // simplified, and already stripped of antimeridian-crossing rings — see
     // scripts/build-countries.mjs. All that's left at runtime is decoding the
     // arcs. The COUNTRIES_WITH_FIRMS guard stays as a cheap consistency check
     // in case the roster shrinks without a rebuild.
-    fetch(COUNTRIES_URL, { signal: ac.signal })
-      .then((r) => r.json() as Promise<Topology>)
-      .then((topo) => {
+    //
+    // This geometry is the map's floor: when no tile provider can be reached
+    // it is the only thing left drawing land, so a single dropped request must
+    // not be the end of it. Each attempt carries its own timeout, and a hung
+    // connection is retried rather than waited on forever.
+    let cancelled = false;
+    const inflight = new Set<AbortController>();
+
+    const attempt = async (): Promise<CountryFeature[]> => {
+      const ac = new AbortController();
+      inflight.add(ac);
+      const timer = window.setTimeout(() => ac.abort(), COUNTRIES_TIMEOUT_MS);
+      try {
+        const res = await fetch(COUNTRIES_URL, { signal: ac.signal });
+        if (!res.ok) throw new Error(`countries.topo.json: HTTP ${res.status}`);
+        const topo = (await res.json()) as Topology;
         const obj = topo.objects.countries as GeometryObject;
         const geo = feature(topo, obj) as FeatureCollection;
-        setCountries(
-          (geo.features as CountryFeature[]).filter((f) =>
-            COUNTRIES_WITH_FIRMS.has(f.properties.alpha2)
-          )
+        return (geo.features as CountryFeature[]).filter((f) =>
+          COUNTRIES_WITH_FIRMS.has(f.properties.alpha2)
         );
-      })
-      .catch(() => {
-        if (!ac.signal.aborted) setCountries([]);
-      });
-    return () => ac.abort();
+      } finally {
+        window.clearTimeout(timer);
+        inflight.delete(ac);
+      }
+    };
+
+    void (async () => {
+      for (let i = 0; i <= COUNTRIES_RETRIES; i++) {
+        try {
+          const features = await attempt();
+          if (!cancelled) setCountries(features);
+          return;
+        } catch (err) {
+          if (cancelled) return;
+          if (i === COUNTRIES_RETRIES) {
+            console.error('[map] country geometry unavailable after retries', err);
+            setCountries([]);
+            return;
+          }
+          await new Promise((r) => window.setTimeout(r, COUNTRIES_RETRY_DELAY_MS * (i + 1)));
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      for (const ac of inflight) ac.abort();
+    };
   }, []);
 
   const roleCounts = useMemo(() => {
@@ -240,25 +348,25 @@ export function MapView({
   }, [focusedCountryCode]);
 
   const countryStyle = (_f: CountryFeature): L.PathOptions => {
-    // Country polygons carry NO persistent style. No focus stroke, no match
-    // tint, no dim wash. Outline + highlight appear only on mouseover, and
-    // only while a continent is in view (zoom <= REGION_ZOOM); past that, the
-    // entire countriesPane is hidden via the `.is-zoomed-deep` class set by
-    // CountryInteractionGate. Filtering / focus state still drives the firm
-    // markers and the rails — just not the polygon ink.
-    const fillColor = CARD_TONE;
-    const fillOpacity = 0;
-    const strokeColor = BORDERLINE;
-    const strokeWeight = 0;
-    const strokeOpacity = 0;
+    // With a basemap up, country polygons carry NO persistent style. No focus
+    // stroke, no match tint, no dim wash. Outline + highlight appear only on
+    // mouseover, and only while a continent is in view (zoom <= REGION_ZOOM);
+    // past that, the entire countriesPane is hidden via `.is-zoomed-deep`.
+    // Filtering / focus state drives the markers and the rails, not the ink.
+    //
+    // With every basemap unreachable these polygons ARE the map, so they get
+    // painted as land. That is the difference between a degraded map and a
+    // broken one: coastlines still read, and a dot over Norway still looks
+    // like it is over Norway instead of floating on blank paper.
+    const down = basemapRef.current === 'down';
 
     return {
-      stroke: strokeWeight > 0,
-      color: strokeColor,
-      weight: strokeWeight,
-      opacity: strokeOpacity,
-      fillColor,
-      fillOpacity,
+      stroke: down,
+      color: BORDERLINE,
+      weight: down ? 0.75 : 0,
+      opacity: down ? 0.9 : 0,
+      fillColor: down ? LAND_TONE : CARD_TONE,
+      fillOpacity: down ? 1 : 0,
     };
   };
 
@@ -279,30 +387,12 @@ export function MapView({
         touchZoom={false}
         className="leaflet-root"
       >
-        {/* `updateWhenZooming={false}` is the important one: without it every
-            intermediate frame of a flyTo requests a fresh tile pyramid, and
-            the two Esri layers double that. `keepBuffer` holds the ring of
-            tiles just off-screen so a short pan doesn't refetch. */}
-        <TileLayer
-          url={TILE_BASE_URL}
-          attribution={TILE_ATTR}
-          maxZoom={16}
-          updateWhenZooming={false}
-          updateWhenIdle={true}
-          keepBuffer={3}
-        />
-        <TileLayer
-          url={TILE_LABELS_URL}
-          maxZoom={16}
-          pane="tilePane"
-          updateWhenZooming={false}
-          updateWhenIdle={true}
-          keepBuffer={3}
-        />
+        <BasemapLayers onStatus={setBasemapStatus} />
 
         {countries.length > 0 && (
           <Pane name="countriesPane" style={{ zIndex: 350 }}>
           <GeoJSON
+            ref={countriesLayerRef}
             /* No key. The layer is deliberately mounted once: country
                polygons carry no persistent style, so focus and match state
                don't change a single one of them. Keying on those used to tear
@@ -404,11 +494,105 @@ export function MapView({
         <FlyToTarget target={target} />
         <DoubleClickZoomOut onReturnToGlobe={onReturnToGlobe} />
         <SteppedWheelZoom />
-        <CountryInteractionGate />
+        <CountryInteractionGate basemapDown={basemapStatus === 'down'} />
         <PopupMountAnimator />
         <PaperBackdrop />
+        <GeometryAttribution active={basemapStatus === 'down'} />
       </MapContainer>
+
+      {/* Say which map the user is actually looking at. A silently swapped or
+          missing basemap is the kind of failure people blame on themselves. */}
+      {(basemapStatus === 'degraded' || basemapStatus === 'down') && (
+        <p className="basemap-notice mono" role="status">
+          {basemapStatus === 'degraded'
+            ? 'Fallback basemap'
+            : 'Basemap unreachable — coastlines only'}
+        </p>
+      )}
     </div>
+  );
+}
+
+/**
+ * Renders the first basemap provider that actually serves tiles.
+ *
+ * Leaflet reports every failed tile through `tileerror`, but individual tiles
+ * legitimately 404 past a provider's coverage, so errors alone prove nothing.
+ * What distinguishes an outage is errors with no successes: a reachable host
+ * serves the middle of the viewport even when the edges miss. So a provider is
+ * only abandoned while it has never delivered a single tile, and the first
+ * successful tile settles the verdict permanently.
+ */
+function BasemapLayers({ onStatus }: { onStatus: (status: BasemapStatus) => void }) {
+  const [index, setIndex] = useState(0);
+  const [down, setDown] = useState(false);
+  const settledRef = useRef(false);
+  const errorsRef = useRef(0);
+  // The provider we have already given up on. A dying tile layer keeps firing
+  // errors for tiles that were already in flight when we decided to move on;
+  // without this latch those late errors advance the chain a second time and
+  // skip a perfectly good provider.
+  const abandonedRef = useRef(-1);
+
+  // A new provider starts with a clean slate.
+  useEffect(() => {
+    errorsRef.current = 0;
+  }, [index]);
+
+  // Once every provider has failed, drop the tile layers entirely rather than
+  // leaving a dead one mounted: it would keep retrying tiles that cannot load,
+  // and — worse — keep crediting a provider whose imagery is not on screen.
+  const basemap = BASEMAPS[index];
+  if (down || !basemap) return null;
+
+  const handleLoad = () => {
+    if (settledRef.current) return;
+    settledRef.current = true;
+    onStatus(index === 0 ? 'ok' : 'degraded');
+  };
+
+
+  const handleError = () => {
+    if (settledRef.current || abandonedRef.current === index) return;
+    errorsRef.current += 1;
+    if (errorsRef.current < TILE_ERROR_THRESHOLD) return;
+    abandonedRef.current = index;
+    if (index + 1 < BASEMAPS.length) {
+      console.warn(`[map] basemap "${basemap.id}" unreachable — falling back`);
+      setIndex(index + 1);
+      return;
+    }
+    console.warn('[map] no basemap reachable — country polygons carrying the map');
+    settledRef.current = true;
+    setDown(true);
+    onStatus('down');
+  };
+
+  // `updateWhenZooming={false}` is the important perf option: without it every
+  // intermediate frame of a flyTo requests a fresh tile pyramid, and a
+  // two-layer provider doubles that. `keepBuffer` holds the ring of tiles just
+  // off-screen so a short pan doesn't refetch.
+  return (
+    <>
+      {basemap.urls.map((url, i) => (
+        <TileLayer
+          key={`${basemap.id}-${i}`}
+          url={url}
+          attribution={i === 0 ? basemap.attribution : undefined}
+          maxZoom={basemap.maxZoom}
+          pane="tilePane"
+          updateWhenZooming={false}
+          updateWhenIdle={true}
+          keepBuffer={3}
+          // `tileload` (one tile arrived), not `load` (the whole visible batch
+          // settled). `load` fires once per loading session and can land before
+          // react-leaflet has attached the handler, so a provider that works
+          // can go unreported; a single delivered tile is unambiguous proof of
+          // reachability and cannot be missed the same way.
+          eventHandlers={{ tileload: handleLoad, tileerror: handleError }}
+        />
+      ))}
+    </>
   );
 }
 
@@ -1192,10 +1376,14 @@ function PopupMountAnimator() {
   return null;
 }
 
-function CountryInteractionGate() {
+function CountryInteractionGate({ basemapDown }: { basemapDown: boolean }) {
   const map = useMap();
   useEffect(() => {
     const root = map.getContainer();
+    // With no basemap, the polygons are the only geography there is, so the
+    // deep-zoom hide has to be suspended — CSS keys off this class. They stay
+    // non-interactive past REGION_ZOOM either way.
+    root.classList.toggle('basemap-down', basemapDown);
     const apply = () => {
       // Hide country polygons as soon as the user zooms past continent view.
       // At REGION_ZOOM (6) or shallower, polygons are interactive on hover.
@@ -1207,8 +1395,32 @@ function CountryInteractionGate() {
     return () => {
       map.off('zoomend', apply);
       root.classList.remove('is-zoomed-deep');
+      root.classList.remove('basemap-down');
     };
-  }, [map]);
+  }, [map, basemapDown]);
+  return null;
+}
+
+/**
+ * Credits the country geometry while it is the only thing drawing the map.
+ *
+ * Attribution has to describe what is on screen. With tiles up, the tile
+ * provider is credited and these polygons are invisible; with tiles down, the
+ * provider's credit is gone with its layer and Natural Earth — the source
+ * behind the baked outlines — is what deserves the line.
+ */
+function GeometryAttribution({ active }: { active: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!active) return;
+    const credit =
+      'Country outlines: <a href="https://www.naturalearthdata.com/">Natural Earth</a>';
+    const control = map.attributionControl;
+    control?.addAttribution(credit);
+    return () => {
+      control?.removeAttribution(credit);
+    };
+  }, [map, active]);
   return null;
 }
 
