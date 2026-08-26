@@ -52,6 +52,14 @@ jobs:
       - name: Test the jobs pipeline
         run: npm run test:jobs
 
+      # Probes only firms with no recorded source (fast no-op once all firms
+      # are discovered). On first run this bootstraps the JOB_SOURCES registry
+      # so the refresh step below has endpoints to call. continue-on-error so
+      # a transient network blip in discovery doesn't abort the refresh.
+      - name: Discover job sources (new firms only)
+        run: npm run discover:jobs
+        continue-on-error: true
+
       - name: Refresh listings
         run: npm run refresh:jobs
 
